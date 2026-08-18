@@ -1,0 +1,49 @@
+name: stage2-resume-partial
+
+on:
+  workflow_call:
+    inputs:
+      job_id:
+        required: true
+        type: string
+      smoke_test:
+        required: false
+        type: boolean
+        default: false
+  workflow_dispatch:
+    inputs:
+      job_id:
+        description: "jobs.id UUID"
+        required: true
+        type: string
+      smoke_test:
+        description: "Write debug resume_json before generation"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  run-stage2:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run resume partial
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python -m src.generate_resume_partial \
+            --job-id "${{ inputs.job_id }}" \
+            ${{ inputs.smoke_test && '--smoke-test' || '' }}
