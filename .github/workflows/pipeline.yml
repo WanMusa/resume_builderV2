@@ -3,6 +3,11 @@ on:
     paths:
       - "incoming/**/*.csv"
 
+permissions:
+  contents: read
+  models: read
+  copilot-requests: write
+
 jobs:
   stage1:
     runs-on: ubuntu-latest
