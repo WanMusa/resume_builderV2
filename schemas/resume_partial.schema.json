@@ -1,0 +1,71 @@
+import argparse
+import json
+from pathlib import Path
+
+from src.db import get_job, update_job
+from src.llm_backend import get_backend
+
+
+def load_text(path: str) -> str:
+    return Path(path).read_text(encoding="utf-8")
+
+
+def load_json(path: str):
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--job-id", required=True)
+    args = parser.parse_args()
+
+    job_id = args.job_id
+    print(f"[stage2] start job_id={job_id}")
+
+    job = get_job(job_id)
+    if not job:
+        print(f"[stage2] job not found: {job_id}")
+        raise RuntimeError(f"Job not found: {job_id}")
+
+    print(f"[stage2] current status={job.get('status')}")
+    if job.get("status") != "extracted":
+        print(f"[stage2] skipping job_id={job_id}, status={job.get('status')}")
+        return
+
+    job_scope = job.get("job_scope")
+    if not job_scope:
+        print(f"[stage2] missing job_scope for job_id={job_id}")
+        update_job(job_id, status="failed", error_message="Missing job_scope for Stage 2")
+        return
+
+    try:
+        prompt_tmpl = load_text("prompts/prompt2_generate_resume_partial.txt")
+        schema = load_json("schemas/resume_partial.schema.json")
+        base_resume = load_json("assets/base_resume.json")
+        print("[stage2] loaded prompt/schema/base resume")
+
+        prompt = prompt_tmpl.format(
+            job_scope_json=json.dumps(job_scope, ensure_ascii=False),
+            base_resume_json=json.dumps(base_resume, ensure_ascii=False)
+        )
+
+        backend = get_backend("generate_resume")
+        print("[stage2] backend loaded")
+
+        resume_partial = backend.complete(prompt=prompt, json_schema=schema)
+        print("[stage2] llm output validated")
+
+        update_job(
+            job_id,
+            status="resume_generated",
+            resume_json=resume_partial,
+            error_message=None
+        )
+        print(f"[stage2] success job_id={job_id}")
+    except Exception as e:
+        print(f"[stage2] failed job_id={job_id} err={e}")
+        update_job(job_id, status="failed", error_message=str(e))
+
+
+if __name__ == "__main__":
+    main()
