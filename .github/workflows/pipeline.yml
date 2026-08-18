@@ -1,3 +1,8 @@
+on:
+  push:
+    paths:
+      - "incoming/**/*.csv"
+
 jobs:
   stage1:
     runs-on: ubuntu-latest
