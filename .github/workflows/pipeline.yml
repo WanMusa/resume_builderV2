@@ -29,9 +29,30 @@ jobs:
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Replace with your real command.
-          # Must produce exactly one job id for stage2.
-          JOB_ID=$(python -m src.stage1_extract --print-job-id)
+          # Step 1: parse CSV, insert jobs, capture run_id
+          RUN_OUTPUT=$(python -m src.parse_csv)
+          echo "$RUN_OUTPUT"
+          RUN_ID=$(echo "$RUN_OUTPUT" | grep '^run_id=' | cut -d= -f2)
+          echo "run_id=$RUN_ID"
+
+          # Step 2: get pending job ids
+          IDS_OUTPUT=$(python -m src.query_by_status --run-id "$RUN_ID" --status pending)
+          IDS_JSON=$(echo "$IDS_OUTPUT" | grep '^ids_json=' | cut -d= -f2-)
+          echo "pending jobs: $IDS_JSON"
+
+          # Step 3: extract job scope for each pending job
+          echo "$IDS_JSON" | python -c "
+          import json, sys, subprocess
+          ids = json.loads(sys.stdin.read())
+          for job_id in ids:
+              print(f'Extracting job scope for {job_id}')
+              subprocess.run(['python', '-m', 'src.extract_job_scope', '--job-id', job_id], check=False)
+          "
+
+          # Step 4: get first extracted job id for stage2
+          EXTRACTED_OUTPUT=$(python -m src.query_by_status --run-id "$RUN_ID" --status extracted)
+          EXTRACTED_JSON=$(echo "$EXTRACTED_OUTPUT" | grep '^ids_json=' | cut -d= -f2-)
+          JOB_ID=$(echo "$EXTRACTED_JSON" | python -c "import json,sys; ids=json.loads(sys.stdin.read()); print(ids[0] if ids else '')")
           echo "job_id=$JOB_ID" >> "$GITHUB_OUTPUT"
           echo "Stage1 job_id=$JOB_ID"
 
