@@ -1,0 +1,95 @@
+{
+	"ats_alignment": {
+		"matched_keywords": [
+			"product strategy",
+			"AI-native",
+			"discovery",
+			"scope management",
+			"stakeholder management",
+			"backlog",
+			"value framing",
+			"hypothesis",
+			"success measures",
+			"client-facing",
+			"software services",
+			"digital platforms",
+			"AI prototyping",
+			"product delivery",
+			"problem framing",
+			"product management"
+		],
+		"missing_keywords": [
+			"hybrid working",
+			"Auckland",
+			"IT consulting",
+			"commercial acumen"
+		],
+		"coverage_estimate": 0.8
+	},
+	"career_profile": "Product Strategist with 9+ years of experience delivering AI-powered, SaaS and enterprise technology solutions across agritech, retail, manufacturing and public sector environments. Proven ability to frame problems worth solving, define measurable success criteria and translate complex business requirements into high-value product outcomes. Experienced in leading discovery, managing scope and backlogs, and maintaining strong client relationships through continuous delivery. Track record of stakeholder collaboration, hypothesis-driven product strategy and AI-assisted prototyping, with measurable results including 8% revenue uplift, 30% reduction in planning effort and platform scaling from 2,000 to 8,000 users.",
+	"target_role_tags": [
+		"Product Strategy",
+		"AI-Native Delivery",
+		"Stakeholder Management",
+		"Discovery & Framing",
+		"Scope & Backlog Management",
+		"Client-Facing",
+		"Hypothesis-Driven"
+	],
+	"areas_of_expertise": [
+		"Product Strategy & Value Framing",
+		"AI-Assisted Prototyping & Delivery",
+		"Discovery Leadership & Hypothesis Definition",
+		"Stakeholder Collaboration & Client Relationships",
+		"Scope & Backlog Management",
+		"Defining Success Measures & Outcomes",
+		"Cross-Functional Team Coordination",
+		"Agile Delivery & MVP Development",
+		"Clear Written & Verbal Communication"
+	],
+	"professional_experience": [
+		{
+			"title": "Product Manager (Agile Business Analyst)",
+			"period": "Jul 2025 – Present",
+			"company": "Map of Ag",
+			"tailored_summary": "Lead discovery and product strategy for AI-powered agricultural solutions using AWS Bedrock, framing problems worth solving and defining measurable success criteria. Collaborate closely with stakeholders, engineering teams and end users to prioritise high-value initiatives, manage scope and translate business requirements into successful product outcomes for more than 8,000 farm connections.",
+			"tailored_achievements": [
+				"Delivered AI-powered fertiliser intelligence using AWS Bedrock, rapidly prototyping and testing solutions that automate invoice ingestion, nutrient extraction and nitrogen analysis.",
+				"Implemented AI-driven natural language analytics platform, enabling non-technical users to answer complex business questions through automated database querying and insights generation.",
+				"Reduced farm planning effort by 30% through ownership of product roadmap, discovery leadership and delivery of predictive analytics capabilities within a SaaS herd management platform.",
+				"Expanded enterprise data connectivity from 2,000 to 8,000 farms with zero service disruption by leading platform scalability initiatives and stakeholder alignment."
+			]
+		},
+		{
+			"title": "Senior Business Analyst",
+			"period": "Aug 2023 – Jul 2025",
+			"company": "Vulcan Steel Ltd",
+			"tailored_summary": "Partnered with cross-functional stakeholders, product teams and technology partners to identify value opportunities, prioritise high-impact initiatives and drive measurable business outcomes. Managed backlog prioritisation and roadmap planning for enterprise transformation initiatives.",
+			"tailored_achievements": [
+				"Delivered 8% revenue uplift by defining product requirements and leading discovery for a hybrid multi-warehouse order management MVP, improving order fulfilment and customer responsiveness.",
+				"Facilitated backlog prioritisation, stakeholder alignment and roadmap planning for digital transformation migration from Microsoft Navision to Dynamics 365 Finance & Operations.",
+				"Translated complex business requirements into actionable user stories and acceptance criteria, ensuring alignment between business objectives and technical execution."
+			]
+		},
+		{
+			"title": "Product Owner / Business Analyst",
+			"period": "Feb 2021 – Jul 2023",
+			"company": "Triquestra International",
+			"tailored_summary": "Owned product backlogs and led discovery in collaboration with client stakeholders, ensuring product roadmaps aligned with customer requirements, business objectives and technical feasibility. Maintained long-term client relationships through continuous, meaningful delivery of SaaS integrations and platform enhancements.",
+			"tailored_achievements": [
+				"Delivered complex SaaS integrations across POS, SAP and loyalty platforms for major clients including Z Energy, Caltex and Daiso, increasing retail marketing effectiveness and customer targeting.",
+				"Designed and delivered a unified loyalty platform consolidating three disparate data sources into a single customer view, enhancing client decision-making capabilities.",
+				"Reduced major production defects by 40% and cut regression testing effort by 60% through implementation of automated workflows and improved quality assurance processes."
+			]
+		},
+		{
+			"title": "Business Analyst",
+			"period": "Jun 2017 – Oct 2019",
+			"company": "Fusionex Ltd",
+			"tailored_summary": "Facilitated backlog refinement, sprint planning and stakeholder engagement to align product outcomes with business objectives. Gathered and translated business requirements into user stories and functional specifications for successful solution delivery.",
+			"tailored_achievements": [
+				"Reduced licensing approval times by 25% by delivering SaaS solutions that automated workflows for public sector clients."
+			]
+		}
+	]
+}

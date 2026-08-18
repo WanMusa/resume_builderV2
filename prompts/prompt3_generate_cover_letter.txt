@@ -13,8 +13,10 @@ TASK:
 Write a professional cover letter that fits on ONE PAGE (300–400 words maximum across all paragraphs combined).
 
 OUTPUT STRUCTURE:
-1. poster_type      – detect from job scope: "direct" (posted by the hiring company itself), "recruiter" (posted by a recruitment agency or third-party recruiter), or "unknown"
-2. salutation        – e.g. "Dear [Name]," or "Dear Hiring Manager,"
+1. poster_type         – detect from job scope: "direct" (posted by the hiring company itself), "recruiter" (posted by a recruitment agency or third-party recruiter), or "unknown"
+2. company_name        – the hiring company name if identifiable from the job scope, otherwise empty string ""
+3. hiring_manager_name – the specific contact person name if mentioned in the job scope, otherwise empty string ""
+4. salutation        – e.g. "Dear [Name]," or "Dear Hiring Manager,"
 3. opening_paragraph – who you are, the exact role you are applying for, and a compelling reason why. If poster_type is "recruiter", open by referencing the opportunity brought to your attention; if "direct", address the company naturally
 4. body_paragraph_1  – your strongest relevant experience or achievement that directly maps to a key requirement in the job scope
 5. body_paragraph_2  – a second differentiating strength, cultural fit, or specific alignment with the organisation's mission/values (if known from job scope). If poster_type is "recruiter" and the end-client is unnamed, focus on transferable strengths instead

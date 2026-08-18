@@ -33,6 +33,12 @@
     "sign_off": {
       "type": "string",
       "minLength": 1
+    },
+    "company_name": {
+      "type": "string"
+    },
+    "hiring_manager_name": {
+      "type": "string"
     }
   }
 }
