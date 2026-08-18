@@ -1,0 +1,30 @@
+name: Copilot CI Smoke Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-copilot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Copilot CLI
+        run: npm install -g @github/copilot
+
+      - name: Copilot version
+        run: copilot --version
+
+      - name: Copilot prompt smoke test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          copilot -p "Reply with exactly: OK" -s --no-ask-user
