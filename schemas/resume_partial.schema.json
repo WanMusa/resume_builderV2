@@ -1,141 +1,131 @@
-import argparse
-import json
-import os
-import traceback
-from datetime import datetime, timezone
-
-# Adjust these imports to your project structure
-from src.db import get_job, update_job
-from src.llm import generate_resume_json  # <-- replace with your actual generator
-
-
-ALLOWED_INPUT_STATUSES = {"extracted", "pending"}
-SUCCESS_STATUS = "resume_generated"
-FAILED_STATUS = "failed"
-
-
-def _utc_now():
-    return datetime.now(timezone.utc).isoformat()
-
-
-def _log(msg: str):
-    print(f"[resume_partial] {msg}", flush=True)
-
-
-def _safe_trim(s):
-    return (s or "").strip()
-
-
-def _build_fallback_scope(job: dict) -> dict:
-    """
-    Optional resilience: if job_scope is missing but link/title/company exist,
-    create minimal scope so generator can still run.
-    """
-    return {
-        "role": job.get("role") or job.get("title") or "",
-        "company": job.get("company") or "",
-        "job_description_text": job.get("job_description_text") or "",
-        "link": job.get("link") or "",
-        "source": "fallback_from_job_row",
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/schemas/resume_partial.schema.json",
+  "title": "Resume Partial",
+  "type": "object",
+  "required": [
+    "basics",
+    "summary",
+    "skills",
+    "experience",
+    "education",
+    "projects"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "basics": {
+      "type": "object",
+      "required": ["name", "email"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "email": { "type": "string", "format": "email" },
+        "phone": { "type": "string" },
+        "location": { "type": "string" },
+        "linkedin": { "type": "string" },
+        "github": { "type": "string" },
+        "portfolio": { "type": "string" }
+      }
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "skills": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "default": []
+    },
+    "experience": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "required": ["title", "company", "startDate", "highlights"],
+        "additionalProperties": false,
+        "properties": {
+          "title": { "type": "string", "minLength": 1 },
+          "company": { "type": "string", "minLength": 1 },
+          "location": { "type": "string" },
+          "startDate": { "type": "string", "minLength": 1 },
+          "endDate": { "type": "string" },
+          "current": { "type": "boolean", "default": false },
+          "highlights": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "minItems": 1
+          }
+        }
+      }
+    },
+    "education": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "required": ["institution", "area", "studyType"],
+        "additionalProperties": false,
+        "properties": {
+          "institution": { "type": "string", "minLength": 1 },
+          "area": { "type": "string", "minLength": 1 },
+          "studyType": { "type": "string", "minLength": 1 },
+          "startDate": { "type": "string" },
+          "endDate": { "type": "string" },
+          "score": { "type": "string" }
+        }
+      }
+    },
+    "projects": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "required": ["name", "highlights"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "description": { "type": "string" },
+          "url": { "type": "string" },
+          "highlights": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "minItems": 1
+          },
+          "techStack": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 },
+            "default": []
+          }
+        }
+      }
+    },
+    "certifications": {
+      "type": "array",
+      "default": [],
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "issuer": { "type": "string" },
+          "date": { "type": "string" }
+        }
+      }
+    },
+    "keywords_matched": {
+      "type": "array",
+      "default": [],
+      "items": { "type": "string" }
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "job_id": { "type": "string" },
+        "generated_at": { "type": "string" },
+        "model": { "type": "string" }
+      }
     }
-
-
-def run(job_id: str, smoke_test: bool = False):
-    _log(f"start job_id={job_id} at {_utc_now()}")
-
-    job = get_job(job_id)
-    if not job:
-        _log("FAIL: job not found")
-        return 2
-
-    status = _safe_trim(job.get("status")).lower()
-    link = job.get("link")
-    _log(f"fetched status={status} link={link}")
-
-    if status not in ALLOWED_INPUT_STATUSES:
-        _log(f"SKIP: status '{status}' not in {sorted(ALLOWED_INPUT_STATUSES)}")
-        return 0
-
-    job_scope = job.get("job_scope")
-    has_scope = bool(job_scope)
-    _log(f"has_job_scope={has_scope}")
-
-    # Optional fallback if scope missing
-    if not job_scope:
-        _log("job_scope missing, building fallback scope")
-        job_scope = _build_fallback_scope(job)
-
-    # If still empty in meaningful way, fail with explicit reason
-    if not any([job_scope.get("role"), job_scope.get("company"), job_scope.get("job_description_text"), job_scope.get("link")]):
-        msg = "Missing job_scope and insufficient fallback fields"
-        _log(f"FAIL: {msg}")
-        update_job(
-            job_id,
-            status=FAILED_STATUS,
-            error_message=msg,
-            updated_at=_utc_now(),
-        )
-        return 1
-
-    try:
-        if smoke_test:
-            _log("smoke_test enabled: writing minimal resume_json")
-            update_job(
-                job_id,
-                resume_json={"debug": "smoke-test", "job_id": job_id, "ts": _utc_now()},
-                updated_at=_utc_now(),
-            )
-            _log("smoke-test write complete")
-
-        _log("generating resume_json via LLM")
-        resume_payload = generate_resume_json(job_scope=job_scope, job=job)
-
-        if not resume_payload:
-            raise ValueError("Generator returned empty resume payload")
-
-        # Validate serializable JSON
-        json.dumps(resume_payload)
-
-        _log("writing resume_json + status=resume_generated")
-        update_job(
-            job_id,
-            resume_json=resume_payload,
-            status=SUCCESS_STATUS,
-            error_message=None,
-            resume_attempts=(job.get("resume_attempts") or 0) + 1,
-            updated_at=_utc_now(),
-        )
-        _log("success: resume_generated")
-        return 0
-
-    except Exception as e:
-        err = f"{type(e).__name__}: {e}"
-        _log(f"EXCEPTION: {err}")
-        _log(traceback.format_exc())
-
-        try:
-            update_job(
-                job_id,
-                status=FAILED_STATUS,
-                error_message=err[:2000],
-                resume_attempts=(job.get("resume_attempts") or 0) + 1,
-                updated_at=_utc_now(),
-            )
-            _log("failure status persisted")
-        except Exception as inner:
-            _log(f"DOUBLE-FAIL while persisting failure state: {inner}")
-
-        return 1
-
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--job-id", required=True, help="jobs.id UUID")
-    parser.add_argument("--smoke-test", action="store_true", help="Write minimal resume_json before generation")
-    args = parser.parse_args()
-
-    raise SystemExit(run(job_id=args.job_id, smoke_test=args.smoke_test))
-
-
-if __name__ == "__main__":
-    main()
+  }
+}
