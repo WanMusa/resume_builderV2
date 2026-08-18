@@ -1,0 +1,90 @@
+{
+  "identity": {
+    "name": "Wan Musa",
+    "email": "ibnikamil@gmail.com",
+    "mobile": "(+64) 022 307 6507",
+    "location": "Auckland, NZ",
+    "linkedin": "https://www.linkedin.com/in/wan-musa-wan-ahmad-kamil-67a60b54/"
+  },
+  "fixed_sections": {
+    "education": [
+      {
+        "qualification": "Master of Business Administration (MBA)",
+        "institution": "Massey University, Auckland, NZ",
+        "period": "2019 – 2020",
+        "details": "Specialisation: Risk Management, Innovation, Corporate Sustainability"
+      },
+      {
+        "qualification": "Bachelor of Science (Urban Planning)",
+        "institution": "IIUM, Malaysia",
+        "period": "2007 – 2012",
+        "details": ""
+      }
+    ],
+    "certifications": [
+      "IBM – Python for Data Science, AI & Development (2025)",
+      "ICAgile Certified Professional: Agile Project & Delivery Management (2023)"
+    ],
+    "references": "References available upon request."
+  },
+  "base_sections": {
+    "career_profile": "Product Manager with 9+ years of experience delivering SaaS, data, AI and enterprise technology solutions across agritech, retail, manufacturing and public sector environments. Proven track record of driving product strategy, roadmap execution and digital transformation initiatives that improve customer outcomes, operational efficiency and revenue growth. Experienced in leading cross-functional teams, managing product lifecycles, translating complex business requirements into scalable solutions and delivering measurable results, including an 8% revenue uplift, 30% reduction in planning effort, 25% faster approval times and platform scaling from 2,000 to 8,000 users. Skilled in Agile delivery, stakeholder management, product discovery, data analytics and enterprise platforms, with expertise spanning AWS, Azure, Dynamics 365, SaaS integrations and AI-enabled products.",
+    "areas_of_expertise": [
+      "Product Strategy & Roadmap Ownership",
+      "AI-Powered Solutions & Automation",
+      "Agile Delivery & MVP Development",
+      "Data Analysis & Insights (SQL, Python)",
+      "API Design & Systems Integration (REST, SOAP)",
+      "Stakeholder Engagement & Cross-Functional Collaboration"
+    ],
+    "professional_experience": [
+      {
+        "title": "Product Manager (Agile Business Analyst)",
+        "company": "Map of Ag",
+        "location": "Auckland, NZ",
+        "period": "Jul 2025 – Present",
+        "summary": "Drive innovation through the development of AI-powered solutions using AWS Bedrock, including fertiliser intelligence and natural language analytics platforms that convert complex agricultural and operational data into actionable insights. Enhance security, user accessibility and customer experience for more than 8,000 farm connections by leading the implementation of Single Sign-On (SSO) across four integrated SaaS platforms. Accelerate delivery of customer-focused solutions by partnering with stakeholders, engineering teams and end users to define product strategy, prioritise high-value initiatives and translate business requirements into successful product outcomes.",
+        "achievements": [
+          "Delivered an AI-powered fertiliser statement extraction using AWS Bedrock, automating invoice and statement ingestion, nutrient composition extraction, and nitrogen usage analysis.",
+          "Implemented an AI-driven natural language analytics platform using AWS Bedrock, enabling non-technical users to answer complex business questions through automated database querying and insights generation.",
+          "Reduced farm planning effort by 30% through ownership of the product roadmap and delivery of predictive analytics capabilities within a SaaS herd management platform, enabling data-driven decision-making across dairy operations.",
+          "Expanded enterprise data connectivity from 2,000 to 8,000 farms with zero service disruption by leading platform scalability and data integration initiatives, improving the organisation's ability to deliver actionable agricultural insights."
+        ]
+      },
+      {
+        "title": "Senior Business Analyst",
+        "company": "Vulcan Steel Ltd",
+        "location": "Auckland, NZ",
+        "period": "Aug 2023 – Jul 2025",
+        "summary": "Strengthened customer communication reliability and system performance by partnering with engineering teams to optimise Azure-based messaging architecture and enhance Cosmos DB data structures. Collaborated with cross-functional stakeholders, product teams and technology partners to identify process improvement opportunities, prioritise high-value initiatives and drive measurable business results.",
+        "achievements": [
+          "Delivered an 8% revenue uplift by defining product requirements and leading the successful delivery of a hybrid multi-warehouse order management MVP, improving order fulfilment efficiency and customer responsiveness.",
+          "Accelerated digital transformation initiatives by facilitating backlog prioritisation, stakeholder alignment and roadmap planning for the migration from Microsoft Navision to Dynamics 365 Finance & Operations.",
+          "Improved delivery outcomes by translating complex business requirements into actionable user stories, acceptance criteria and product enhancements, ensuring alignment between business objectives and technical execution."
+        ]
+      },
+      {
+        "title": "Product Owner / Business Analyst",
+        "company": "Triquestra International",
+        "location": "Auckland, NZ",
+        "period": "Feb 2021 – Jul 2023",
+        "summary": "Owned product backlogs and prioritised feature delivery in collaboration with stakeholders; ensured product roadmaps aligned with customer requirements, business objectives and technical feasibility. Identified and delivered process improvements that increased platform scalability, data accuracy and operational efficiency, contributing to stronger client outcomes and long-term product adoption. Drove successful product releases by translating business needs into user stories, acceptance criteria and functional requirements while co-ordinating delivery across cross-functional development teams.",
+        "achievements": [
+          "Increased retail marketing effectiveness and customer targeting capabilities by delivering complex SaaS integrations across POS, SAP and loyalty platforms for major clients, including Z Energy, Caltex and Daiso.",
+          "Enhanced customer engagement and data-driven decision-making by designing and delivering a unified loyalty platform that consolidated three disparate data sources into a single customer view.",
+          "Reduced major production defects by 40% and cut regression testing effort by 60% through the implementation of automated workflows, API enhancements and improved quality assurance processes."
+        ]
+      },
+      {
+        "title": "Business Analyst",
+        "company": "Fusionex Ltd",
+        "location": "APAC",
+        "period": "Jun 2017 – Oct 2019",
+        "summary": "Improved team velocity and delivery lead times by serving as Scrum Master for IoT and software development teams. Gathered and translated business requirements into user stories and functional specifications, ensuring successful solution delivery. Facilitated backlog refinement, sprint planning and stakeholder engagement to align product outcomes with business objectives.",
+        "achievements": [
+          "Reduced licensing approval times by 25%; delivered SaaS solutions that automated workflows for public sector clients."
+        ]
+      }
+    ]
+  }
+}
