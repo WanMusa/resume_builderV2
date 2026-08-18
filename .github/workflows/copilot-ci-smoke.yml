@@ -9,6 +9,7 @@ jobs:
     permissions:
       contents: read
       models: read
+      copilot-requests: write
 
     steps:
       - name: Checkout repository
@@ -26,7 +27,5 @@ jobs:
         run: copilot --version
 
       - name: Copilot prompt smoke test
-        env:
-          COPILOT_GITHUB_TOKEN: ${{ github.token }}
         run: |
           copilot -p "Reply with exactly: OK" -s --no-ask-user
