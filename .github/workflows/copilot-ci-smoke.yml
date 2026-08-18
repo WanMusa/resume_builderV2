@@ -8,6 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      models: read
 
     steps:
       - name: Checkout repository
@@ -26,6 +27,6 @@ jobs:
 
       - name: Copilot prompt smoke test
         env:
-          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          COPILOT_GITHUB_TOKEN: ${{ github.token }}
         run: |
           copilot -p "Reply with exactly: OK" -s --no-ask-user
