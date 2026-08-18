@@ -69,9 +69,11 @@ def insert_job(run_id: str, link: str) -> str:
 
 def update_job(job_id: str, **fields: Any) -> None:
     sb = get_client()
-    payload: Dict[str, Any] = dict(fields)
+    payload: Dict[str, Any] = {k: v for k, v in fields.items() if v is not None}
     payload["updated_at"] = _now_iso()
-    sb.table("jobs").update(payload).eq("id", job_id).execute()
+    resp = sb.table("jobs").update(payload).eq("id", job_id).execute()
+    if not resp.data:
+        raise RuntimeError(f"update_job affected 0 rows for job_id={job_id}. Payload keys: {list(payload.keys())}")
 
 
 def get_jobs_by_status(run_id: str, status: str) -> List[Dict[str, Any]]:
