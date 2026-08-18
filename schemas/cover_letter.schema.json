@@ -3,9 +3,13 @@
   "$id": "https://example.com/schemas/cover_letter.schema.json",
   "title": "Cover Letter",
   "type": "object",
-  "required": ["salutation", "opening_paragraph", "body_paragraph_1", "body_paragraph_2", "closing_paragraph", "sign_off"],
+  "required": ["poster_type", "salutation", "opening_paragraph", "body_paragraph_1", "body_paragraph_2", "closing_paragraph", "sign_off"],
   "additionalProperties": false,
   "properties": {
+    "poster_type": {
+      "type": "string",
+      "enum": ["direct", "recruiter", "unknown"]
+    },
     "salutation": {
       "type": "string",
       "minLength": 1

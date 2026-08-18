@@ -13,12 +13,13 @@ TASK:
 Write a professional cover letter that fits on ONE PAGE (300–400 words maximum across all paragraphs combined).
 
 OUTPUT STRUCTURE:
-1. salutation        – e.g. "Dear [Name]," or "Dear Hiring Manager,"
-2. opening_paragraph – who you are, the exact role you are applying for, and a compelling reason why
-3. body_paragraph_1  – your strongest relevant experience or achievement that directly maps to a key requirement in the job scope
-4. body_paragraph_2  – a second differentiating strength, cultural fit, or specific alignment with the organisation's mission/values (if known from job scope)
-5. closing_paragraph – call to action, express enthusiasm, reference availability for interview
-6. sign_off          – e.g. "Sincerely," or "Kind regards,"
+1. poster_type      – detect from job scope: "direct" (posted by the hiring company itself), "recruiter" (posted by a recruitment agency or third-party recruiter), or "unknown"
+2. salutation        – e.g. "Dear [Name]," or "Dear Hiring Manager,"
+3. opening_paragraph – who you are, the exact role you are applying for, and a compelling reason why. If poster_type is "recruiter", open by referencing the opportunity brought to your attention; if "direct", address the company naturally
+4. body_paragraph_1  – your strongest relevant experience or achievement that directly maps to a key requirement in the job scope
+5. body_paragraph_2  – a second differentiating strength, cultural fit, or specific alignment with the organisation's mission/values (if known from job scope). If poster_type is "recruiter" and the end-client is unnamed, focus on transferable strengths instead
+6. closing_paragraph – call to action, express enthusiasm, reference availability for interview
+7. sign_off          – e.g. "Sincerely," or "Kind regards,"
 
 HARVARD CAREER SERVICES COVER LETTER RULES (apply all):
 - Address to a specific person if the job scope includes a contact name; otherwise use "Dear Hiring Manager:"
