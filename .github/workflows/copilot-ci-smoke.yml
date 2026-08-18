@@ -10,18 +10,24 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install Copilot CLI
         run: npm install -g @github/copilot
 
       - name: Copilot version
         run: copilot --version
+
+      - name: Copilot login status
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          copilot login --check || true
 
       - name: Copilot prompt smoke test
         env:
