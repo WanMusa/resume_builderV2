@@ -10,27 +10,22 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout repository
+        uses: actions/checkout@v5
 
-      - name: Install Node
+      - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: '24'
 
-      - name: Install Copilot CLI
+      - name: Install GitHub Copilot CLI
         run: npm install -g @github/copilot
 
-      - name: Copilot version
+      - name: Show Copilot CLI version
         run: copilot --version
-
-      - name: Copilot login status
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          copilot login --check || true
 
       - name: Copilot prompt smoke test
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
         run: |
           copilot -p "Reply with exactly: OK" -s --no-ask-user
