@@ -131,14 +131,14 @@ def _r_right_tab(p):
 
 
 def _r_bullet(doc: Document, bold_part: str, normal_part: str = ""):
-    """Bullet paragraph: • bold_part normal_part, hanging indent 0.63/1.27cm."""
+    """Bullet paragraph starting at the left margin with space after."""
     from docx.shared import Cm
-    p = doc.add_paragraph()  # Normal style — avoids List Paragraph double-bullet
+    p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     pf = p.paragraph_format
-    pf.left_indent = Cm(1.27)
-    pf.first_line_indent = Cm(-0.64)
-    # Bullet character as its own run (not bold)
+    # Bullet at left edge, text wraps slightly indented past bullet
+    pf.left_indent = Cm(0.35)
+    pf.first_line_indent = Cm(-0.35)
     rb_bull = p.add_run("\u2022  ")
     rb_bull.font.name = RF
     rb_bull.font.size = Pt(CONTENT_PT)
@@ -151,7 +151,7 @@ def _r_bullet(doc: Document, bold_part: str, normal_part: str = ""):
         rn = p.add_run(normal_part)
         rn.font.name = RF
         rn.font.size = Pt(CONTENT_PT)
-    _spacing(p, before=1, after=2, line=1.0)
+    _spacing(p, before=0, after=4, line=1.0)
     return p
 
 
@@ -223,14 +223,14 @@ def build_resume(resume_json: dict, base_resume: dict, output_path: str) -> None
         r = p.add_run(title_str)
         r.bold = True
         r.font.name = RF
-        r.font.size = Pt(CONTENT_PT)
+        r.font.size = Pt(11)
         period = job.get("period", "")
         if period:
             _r_right_tab(p)
             r2 = p.add_run("\t" + period)
             r2.bold = True
             r2.font.name = RF
-            r2.font.size = Pt(CONTENT_PT)
+            r2.font.size = Pt(11)
         _spacing(p, before=10, after=2, line=1.0)
 
         # Summary
@@ -240,7 +240,7 @@ def build_resume(resume_json: dict, base_resume: dict, output_path: str) -> None
             r.font.name = RF
             r.font.size = Pt(CONTENT_PT)
             p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-            _spacing(p, after=2, line=1.0)
+            _spacing(p, after=6, line=1.0)
 
         # Key Achievements
         achievements = job.get("tailored_achievements", [])
@@ -285,13 +285,13 @@ def build_resume(resume_json: dict, base_resume: dict, output_path: str) -> None
             rt = p.add_run("\t" + edu["period"])
             rt.font.name = RF
             rt.font.size = Pt(CONTENT_PT)
-        _spacing(p, before=3, after=1, line=1.0)
+        _spacing(p, before=3, after=4, line=1.0)
         if edu.get("details"):
             p = doc.add_paragraph()
             p.add_run(edu["details"]).font.name = RF
             p.runs[-1].font.size = Pt(CONTENT_PT)
             p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-            _spacing(p, after=1, line=1.0)
+            _spacing(p, after=4, line=1.0)
 
     for cert in fixed.get("certifications", []):
         # Extract trailing (YYYY) and place right-aligned
@@ -308,7 +308,7 @@ def build_resume(resume_json: dict, base_resume: dict, output_path: str) -> None
             ry = p.add_run("\t" + cert_year)
             ry.font.name = RF
             ry.font.size = Pt(CONTENT_PT)
-        _spacing(p, after=1, line=1.0)
+        _spacing(p, after=4, line=1.0)
 
     # ── REFERENCES ────────────────────────────────────────────────────────────
     _r_section(doc, "REFERENCES")
