@@ -1,19 +1,22 @@
 import argparse
 import json
-import os
+import re
 from datetime import date
 from pathlib import Path
 
 from docx import Document
-from docx.enum.text import WD_LINE_SPACING
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_LINE_SPACING
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
-from docx.shared import Pt
+from docx.shared import Pt, RGBColor
 
 TEMPLATE_RESUME = "assets/templates/resume_template.docx"
 TEMPLATE_COVER = "assets/templates/cover_letter_template.docx"
 BASE_RESUME = "assets/base_resume.json"
 OUTPUT_DIR = "output"
+
+COVER_FONT = "Aptos"
+COVER_SIZE = 11
 
 
 def _clear_body(doc: Document) -> None:
@@ -23,7 +26,8 @@ def _clear_body(doc: Document) -> None:
             body.remove(child)
 
 
-def _add_hyperlink(paragraph, text: str, url: str) -> None:
+def _add_hyperlink(paragraph, text: str, url: str, font_name: str = "Aptos", font_size: int = 11) -> None:
+    """Add a styled hyperlink (blue, underlined) to a paragraph."""
     part = paragraph.part
     r_id = part.relate_to(
         url,
@@ -32,12 +36,44 @@ def _add_hyperlink(paragraph, text: str, url: str) -> None:
     )
     hyperlink = OxmlElement("w:hyperlink")
     hyperlink.set(qn("r:id"), r_id)
+
     new_run = OxmlElement("w:r")
+    rPr = OxmlElement("w:rPr")
+
+    # Apply Hyperlink character style (blue + underline)
+    rStyle = OxmlElement("w:rStyle")
+    rStyle.set(qn("w:val"), "Hyperlink")
+    rPr.append(rStyle)
+
+    # Font
+    rFonts = OxmlElement("w:rFonts")
+    rFonts.set(qn("w:ascii"), font_name)
+    rFonts.set(qn("w:hAnsi"), font_name)
+    rPr.append(rFonts)
+
+    # Size (half-points)
+    sz = OxmlElement("w:sz")
+    sz.set(qn("w:val"), str(font_size * 2))
+    rPr.append(sz)
+    szCs = OxmlElement("w:szCs")
+    szCs.set(qn("w:val"), str(font_size * 2))
+    rPr.append(szCs)
+
+    new_run.append(rPr)
     t = OxmlElement("w:t")
     t.text = text
     new_run.append(t)
     hyperlink.append(new_run)
     paragraph._p.append(hyperlink)
+
+
+def _run(paragraph, text: str, bold: bool = False, size: float = 10, font: str | None = None):
+    r = paragraph.add_run(text)
+    r.bold = bold
+    r.font.size = Pt(size)
+    if font:
+        r.font.name = font
+    return r
 
 
 def _spacing(para, before: float = 0, after: float = 0, line: float = 1.1) -> None:
@@ -46,6 +82,11 @@ def _spacing(para, before: float = 0, after: float = 0, line: float = 1.1) -> No
     pf.space_after = Pt(after)
     pf.line_spacing_rule = WD_LINE_SPACING.MULTIPLE
     pf.line_spacing = line
+
+
+def _no_em_dash(text: str) -> str:
+    """Replace em dashes with a comma-space as a safety net."""
+    return re.sub(r"\s*\u2014\s*", ", ", text)
 
 
 def build_resume(resume_json: dict, base_resume: dict, output_path: str) -> None:
@@ -191,60 +232,92 @@ def build_cover_letter(cover_letter_json: dict, base_resume: dict, output_path: 
 
     identity = base_resume["identity"]
     today = date.today().strftime("%d %B %Y").lstrip("0")
+    S = COVER_SIZE
+    F = COVER_FONT
 
-    # Header block (name + contact on newlines within one paragraph)
-    p = doc.add_paragraph()
-    r = p.add_run(identity["name"])
-    r.bold = True
-    r.font.size = Pt(11)
-    p.add_run("\n" + identity["location"]).font.size = Pt(11)
-    p.add_run("\n" + identity["email"] + "\xa0| " + identity["mobile"]).font.size = Pt(11)
-    p.add_run("\n")
-    _add_hyperlink(p, "LinkedIn", identity["linkedin"])
-    _spacing(p, line=1.15)
-
-    # Date
-    p = doc.add_paragraph()
-    p.add_run(today).font.size = Pt(11)
-    _spacing(p)
-
-    # Recipient
-    hiring_manager = cover_letter_json.get("hiring_manager_name", "")
-    company = cover_letter_json.get("company_name", "")
-    recipient_line = hiring_manager or "Hiring Team"
-    if company:
-        recipient_line += "\n" + company
-    p = doc.add_paragraph()
-    p.add_run(recipient_line).font.size = Pt(11)
-    _spacing(p)
-
-    # Empty line
-    doc.add_paragraph()
-
-    # Salutation
-    p = doc.add_paragraph()
-    p.add_run(cover_letter_json["salutation"]).font.size = Pt(11)
-    _spacing(p)
-
-    # Body paragraphs
-    for field in ["opening_paragraph", "body_paragraph_1", "body_paragraph_2", "closing_paragraph"]:
+    def cp(text="", bold=False, justify=False, before=0, after=8, line=1.0):
+        """Add a cover letter paragraph with standard formatting."""
         p = doc.add_paragraph()
-        p.add_run(cover_letter_json[field]).font.size = Pt(11)
-        _spacing(p)
+        if text:
+            r = p.add_run(_no_em_dash(text))
+            r.bold = bold
+            r.font.size = Pt(S)
+            r.font.name = F
+        if justify:
+            p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        _spacing(p, before=before, after=after, line=line)
+        return p
 
-    # Empty line before sign-off
-    doc.add_paragraph()
-
-    # Sign-off
+    # --- Header block ---
     p = doc.add_paragraph()
-    p.add_run(cover_letter_json["sign_off"]).font.size = Pt(11)
-    _spacing(p)
+    # Name (bold)
+    r = p.add_run(identity["name"])
+    r.bold = True
+    r.font.size = Pt(S)
+    r.font.name = F
+    # Location
+    r2 = p.add_run("\n" + identity["location"])
+    r2.font.size = Pt(S)
+    r2.font.name = F
+    # Email as mailto hyperlink + phone
+    r3 = p.add_run("\n")
+    r3.font.size = Pt(S)
+    _add_hyperlink(p, identity["email"], "mailto:" + identity["email"], F, S)
+    r4 = p.add_run(" | " + identity["mobile"])
+    r4.font.size = Pt(S)
+    r4.font.name = F
+    # LinkedIn on its own line
+    r5 = p.add_run("\n")
+    r5.font.size = Pt(S)
+    _add_hyperlink(p, "LinkedIn", identity["linkedin"], F, S)
+    _spacing(p, before=0, after=12, line=1.0)
 
-    # Name
+    # --- Blank line after header ---
+    cp()
+
+    # --- Date ---
+    cp(today)
+
+    # --- Recipient: company name (not "Hiring Team") ---
+    company = cover_letter_json.get("company_name", "")
+    hiring_manager = cover_letter_json.get("hiring_manager_name", "")
+    if hiring_manager and company:
+        recipient = hiring_manager + "\n" + company
+    elif company:
+        recipient = company
+    elif hiring_manager:
+        recipient = hiring_manager
+    else:
+        recipient = ""
+    if recipient:
+        p = doc.add_paragraph()
+        r = p.add_run(recipient)
+        r.font.size = Pt(S)
+        r.font.name = F
+        _spacing(p, after=8, line=1.15)
+
+    # --- Salutation ---
+    cp(cover_letter_json["salutation"])
+
+    # --- Space after salutation ---
+    cp()
+
+    # --- Body paragraphs (justified, with space after each) ---
+    for field in ["opening_paragraph", "body_paragraph_1", "body_paragraph_2", "closing_paragraph"]:
+        cp(_no_em_dash(cover_letter_json[field]), justify=True, after=10)
+
+    # --- Space before sign-off ---
+    cp()
+
+    # --- Sign-off ---
+    cp(cover_letter_json["sign_off"], after=0)
+
+    # --- Name ---
     p = doc.add_paragraph()
     r = p.add_run(identity["name"])
     r.bold = True
-    r.font.size = Pt(11)
+    r.font.size = Pt(S)
+    r.font.name = F
     _spacing(p)
 
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)

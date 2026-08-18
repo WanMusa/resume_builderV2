@@ -35,7 +35,7 @@ HARVARD CAREER SERVICES COVER LETTER RULES (apply all):
 - Reference specific skills or requirements from the job scope and draw connections to the candidate's credentials
 - Do NOT invent experience, companies, metrics, or qualifications not present in the resume JSON
 - Do NOT use personal pronouns at the start of every sentence
-- Avoid clichés ("I am passionate about...", "I am a team player...")
+- Do NOT use em dashes (—) anywhere in the letter. Use commas, semicolons, or rephrase the sentence instead.
 - Write in NZ English (organisation not organization, etc.)
 
 STRICT RULES:
