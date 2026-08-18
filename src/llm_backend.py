@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import subprocess
 from dataclasses import dataclass
 from typing import Protocol, Dict, Any
@@ -18,14 +19,21 @@ class LLMBackend(Protocol):
         ...
 
 
+def _strip_code_fences(text: str) -> str:
+    t = text.strip()
+    # ```json ... ``` or ``` ... ```
+    if t.startswith("```"):
+        t = re.sub(r"^```(?:json)?\s*", "", t, flags=re.IGNORECASE)
+        t = re.sub(r"\s*```$", "", t)
+    return t.strip()
+
+
 class CopilotCLIBackend:
     def __init__(self, model: str):
         self.model = model
 
     def complete(self, prompt: str, json_schema: Dict[str, Any]) -> Dict[str, Any]:
         env = os.environ.copy()
-        # Important for Actions runner auth
-        # GITHUB_TOKEN is expected to be set at workflow step env.
         cmd = [
             "copilot",
             "-p",
@@ -41,11 +49,11 @@ class CopilotCLIBackend:
                 f"Copilot CLI failed (exit {result.returncode}): {result.stderr.strip()}"
             )
 
-        raw = result.stdout.strip()
+        raw = _strip_code_fences(result.stdout)
         try:
             data = json.loads(raw)
         except json.JSONDecodeError as e:
-            raise RuntimeError(f"Copilot output is not valid JSON: {e}\nOutput:\n{raw}") from e
+            raise RuntimeError(f"Copilot output is not valid JSON: {e}\nOutput:\n{result.stdout}") from e
 
         validate(instance=data, schema=json_schema)
         return data
