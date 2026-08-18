@@ -93,3 +93,10 @@ def get_job(job_id: str) -> Optional[Dict[str, Any]]:
     resp = sb.table("jobs").select("*").eq("id", job_id).limit(1).execute()
     rows = resp.data or []
     return rows[0] if rows else None
+
+
+def get_run(run_id: str) -> Optional[Dict[str, Any]]:
+    sb = get_client()
+    resp = sb.table("runs").select("*").eq("id", run_id).limit(1).execute()
+    rows = resp.data or []
+    return rows[0] if rows else None
