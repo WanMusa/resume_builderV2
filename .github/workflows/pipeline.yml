@@ -1,4 +1,4 @@
-name: Resume Pipeline (Stage 0 + Stage 1)
+name: Resume Pipeline (Stage 0 + Stage 2)
 
 on:
   workflow_dispatch:
@@ -24,7 +24,6 @@ jobs:
             exit 0
           fi
 
-          # For push events, inspect changed files in this commit range
           CHANGED_FILES="$(git diff --name-only HEAD~1 HEAD || true)"
           echo "Changed files:"
           echo "$CHANGED_FILES"
@@ -41,21 +40,16 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       run_id: ${{ steps.parse.outputs.run_id }}
-      links: ${{ steps.parse.outputs.links_json }}
     steps:
       - uses: actions/checkout@v5
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-
       - name: Install Python deps
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
       - id: parse
-        name: Parse CSV and seed runs/jobs
         run: python -m src.parse_csv >> "$GITHUB_OUTPUT"
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -69,16 +63,13 @@ jobs:
       job_ids: ${{ steps.query.outputs.ids_json }}
     steps:
       - uses: actions/checkout@v5
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-
       - name: Install Python deps
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
       - id: query
         run: python -m src.query_by_status --run-id "${{ needs.read-csv.outputs.run_id }}" --status pending >> "$GITHUB_OUTPUT"
         env:
@@ -99,50 +90,92 @@ jobs:
       copilot-requests: write
     steps:
       - uses: actions/checkout@v5
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '24'
-
       - name: Install GitHub Copilot CLI
         run: npm install -g @github/copilot
-
-      - name: Show Copilot version
-        run: copilot --version
-
       - name: Install Python deps
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
-      - name: Extract scope for one job
+      - name: Extract scope
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           GITHUB_TOKEN: ${{ github.token }}
         run: python -m src.extract_job_scope --job-id "${{ matrix.job_id }}"
 
-  finalize-run:
+  get-extracted-jobs:
     needs: [changed-files, read-csv, extract-job-scope]
-    if: always() && needs.changed-files.outputs.has_csv == 'true'
+    if: needs.changed-files.outputs.has_csv == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      job_ids: ${{ steps.query.outputs.ids_json }}
     steps:
       - uses: actions/checkout@v5
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
-
       - name: Install Python deps
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+      - id: query
+        run: python -m src.query_by_status --run-id "${{ needs.read-csv.outputs.run_id }}" --status extracted >> "$GITHUB_OUTPUT"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
 
+  generate-resume-partial:
+    needs: [changed-files, get-extracted-jobs]
+    if: needs.changed-files.outputs.has_csv == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        job_id: ${{ fromJson(needs.get-extracted-jobs.outputs.job_ids) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      models: read
+      copilot-requests: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+      - name: Install GitHub Copilot CLI
+        run: npm install -g @github/copilot
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Generate resume partial
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python -m src.generate_resume_partial --job-id "${{ matrix.job_id }}"
+
+  finalize-run:
+    needs: [changed-files, read-csv, generate-resume-partial]
+    if: always() && needs.changed-files.outputs.has_csv == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
       - name: Finalize run status from DB
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
