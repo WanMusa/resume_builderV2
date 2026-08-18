@@ -29,13 +29,17 @@ STRICT RULES:
 OUTPUT FIELDS:
 - target_role_tags: 3-10 short tags
 - career_profile: concise paragraph tailored to role/seniority/domain
-- areas_of_expertise: 4-12 bullets
+- areas_of_expertise: 4-12 objects, each with:
+  - area: short bold label (e.g. "Agile Delivery & Backlog Management")
+  - description: one concise sentence explaining the capability (no em dashes)
 - professional_experience:
   - title
   - company
   - period
   - tailored_summary
-  - tailored_achievements (1-5)
+  - tailored_achievements (1-5): each as an object with:
+    - highlight: the key metric or outcome (bold portion), e.g. "Delivered an 8% revenue uplift"
+    - detail: the supporting context starting with "by" or "through", e.g. "by defining product requirements and leading delivery of a hybrid MVP"
 - ats_alignment:
   - matched_keywords
   - missing_keywords

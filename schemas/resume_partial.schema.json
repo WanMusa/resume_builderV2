@@ -17,8 +17,16 @@
     },
     "areas_of_expertise": {
       "type": "array",
-      "items": { "type": "string", "minLength": 1 },
-      "minItems": 1
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["area", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "area": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 }
+        }
+      }
     },
     "professional_experience": {
       "type": "array",
@@ -34,8 +42,16 @@
           "tailored_summary": { "type": "string", "minLength": 1 },
           "tailored_achievements": {
             "type": "array",
-            "items": { "type": "string", "minLength": 1 },
-            "minItems": 1
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["highlight", "detail"],
+              "additionalProperties": false,
+              "properties": {
+                "highlight": { "type": "string", "minLength": 1 },
+                "detail": { "type": "string", "minLength": 1 }
+              }
+            }
           }
         }
       }
