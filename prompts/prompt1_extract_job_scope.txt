@@ -1,0 +1,23 @@
+You are an expert job-posting parser.
+
+Task:
+Extract the job scope from the posting at this URL:
+{job_link}
+
+Source content (HTML or page text):
+{page_content}
+
+Return ONLY valid JSON (no markdown, no explanation) that matches this schema intent:
+- title: string
+- company: string
+- seniority_level: string
+- required_skills: string[]
+- preferred_skills: string[]
+- responsibilities: string[]
+- keywords_for_ats: string[]
+- raw_summary: string
+
+Rules:
+- If unknown, use empty string "" for scalar fields and [] for arrays.
+- Do not invent details that are not in the source.
+- Output JSON only.

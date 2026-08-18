@@ -1,0 +1,129 @@
+name: Resume Pipeline (Stage 0 + Stage 1)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'incoming/*.csv'
+
+jobs:
+  read-csv:
+    runs-on: ubuntu-latest
+    outputs:
+      run_id: ${{ steps.parse.outputs.run_id }}
+      links: ${{ steps.parse.outputs.links_json }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - id: parse
+        name: Parse CSV and seed runs/jobs
+        run: python src/parse_csv.py >> "$GITHUB_OUTPUT"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+
+  get-pending-jobs:
+    needs: read-csv
+    runs-on: ubuntu-latest
+    outputs:
+      job_ids: ${{ steps.query.outputs.ids_json }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - id: query
+        run: python src/query_by_status.py --run-id "${{ needs.read-csv.outputs.run_id }}" --status pending >> "$GITHUB_OUTPUT"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+
+  extract-job-scope:
+    needs: get-pending-jobs
+    strategy:
+      fail-fast: false
+      matrix:
+        job_id: ${{ fromJson(needs.get-pending-jobs.outputs.job_ids) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      models: read
+      copilot-requests: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Install GitHub Copilot CLI
+        run: npm install -g @github/copilot
+
+      - name: Show Copilot version
+        run: copilot --version
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Extract scope for one job
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python src/extract_job_scope.py --job-id "${{ matrix.job_id }}"
+
+  finalize-run:
+    needs: [read-csv, extract-job-scope]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Finalize run status from DB
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          RUN_ID: ${{ needs.read-csv.outputs.run_id }}
+        run: |
+          python - <<'PY'
+          from src.db import get_jobs_by_status, finish_run
+          import os
+
+          run_id = os.environ["RUN_ID"]
+          failed = get_jobs_by_status(run_id, "failed")
+          status = "failed" if failed else "completed"
+          finish_run(run_id, status)
+          print(f"Run {run_id} finalized as {status}")
+          PY

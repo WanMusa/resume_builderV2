@@ -1,0 +1,4 @@
+supabase
+requests
+jsonschema
+python-docx
