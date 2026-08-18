@@ -27,5 +27,7 @@ jobs:
         run: copilot --version
 
       - name: Copilot prompt smoke test
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           copilot -p "Reply with exactly: OK" -s --no-ask-user
