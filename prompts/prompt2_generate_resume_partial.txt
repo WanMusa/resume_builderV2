@@ -1,0 +1,42 @@
+You are generating a tailored RESUME PARTIAL in NZ English.
+
+Return JSON only (no markdown, no explanation).
+
+INPUTS:
+- Job scope JSON:
+{job_scope_json}
+
+- Base resume JSON:
+{base_resume_json}
+
+TASK:
+Generate only these mutable sections:
+1- target_role_tags
+2- career_profile
+3- areas_of_expertise
+4- professional_experience (tailored summaries + tailored achievements)
+
+STRICT RULES:
+- Do NOT invent experience, tools, tenure, qualifications, outcomes, or metrics.
+- Keep identity/header/footer/education/certifications unchanged (they are fixed outside this step).
+- Optimise for ATS with natural keyword alignment, no stuffing.
+- Keep bullets concise and impact-focused.
+- Avoid "dash-joiner" style. Do not write clauses like " ... - enabling ... ".
+- Use evidence from base resume only; re-prioritise and reword truthfully.
+- If an item is not supported by base resume evidence, omit it.
+- Maintain chronology order matching base experience sequence.
+
+OUTPUT FIELDS:
+- target_role_tags: 3-10 short tags
+- career_profile: concise paragraph tailored to role/seniority/domain
+- areas_of_expertise: 4-12 bullets
+- professional_experience:
+  - title
+  - company
+  - period
+  - tailored_summary
+  - tailored_achievements (1-5)
+- ats_alignment:
+  - matched_keywords
+  - missing_keywords
+  - coverage_estimate (0.0 to 1.0).
