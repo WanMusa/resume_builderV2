@@ -75,3 +75,15 @@ jobs:
       job_id: ${{ matrix.job_id }}
       smoke_test: false
     secrets: inherit
+
+  stage3:
+    needs: [stage1, stage2]
+    if: ${{ needs.stage1.outputs.job_ids != '[]' && needs.stage1.outputs.job_ids != '' }}
+    strategy:
+      matrix:
+        job_id: ${{ fromJson(needs.stage1.outputs.job_ids) }}
+      fail-fast: false
+    uses: ./.github/workflows/stage3_cover_letter.yml
+    with:
+      job_id: ${{ matrix.job_id }}
+    secrets: inherit

@@ -6,5 +6,9 @@
   "generate_resume": {
     "backend": "copilot_cli",
     "model": "claude-opus-4.5"
+  },
+  "generate_cover_letter": {
+    "backend": "copilot_cli",
+    "model": "claude-opus-4.5"
   }
 }

@@ -1,0 +1,48 @@
+name: stage3-cover-letter
+
+on:
+  workflow_call:
+    inputs:
+      job_id:
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      job_id:
+        description: "jobs.id UUID"
+        required: true
+        type: string
+
+jobs:
+  run-stage3:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      models: read
+      copilot-requests: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+
+      - name: Install GitHub Copilot CLI
+        run: npm install -g @github/copilot
+
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Generate cover letter
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python -m src.generate_cover_letter \
+            --job-id "${{ inputs.job_id }}"

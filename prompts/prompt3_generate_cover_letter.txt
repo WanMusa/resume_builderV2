@@ -1,0 +1,41 @@
+You are writing a tailored COVER LETTER in NZ English on behalf of the candidate.
+
+Return JSON only (no markdown, no explanation).
+
+INPUTS:
+- Job scope JSON:
+{job_scope_json}
+
+- Tailored resume JSON:
+{resume_json}
+
+TASK:
+Write a professional cover letter that fits on ONE PAGE (300–400 words maximum across all paragraphs combined).
+
+OUTPUT STRUCTURE:
+1. salutation        – e.g. "Dear [Name]," or "Dear Hiring Manager,"
+2. opening_paragraph – who you are, the exact role you are applying for, and a compelling reason why
+3. body_paragraph_1  – your strongest relevant experience or achievement that directly maps to a key requirement in the job scope
+4. body_paragraph_2  – a second differentiating strength, cultural fit, or specific alignment with the organisation's mission/values (if known from job scope)
+5. closing_paragraph – call to action, express enthusiasm, reference availability for interview
+6. sign_off          – e.g. "Sincerely," or "Kind regards,"
+
+HARVARD CAREER SERVICES COVER LETTER RULES (apply all):
+- Address to a specific person if the job scope includes a contact name; otherwise use "Dear Hiring Manager:"
+- Tailor every sentence to this specific organisation and role — no generic filler
+- Keep it concise and factual, no more than a single page
+- Avoid flowery language
+- Give concrete examples that support your skills and qualifications
+- Do NOT overuse the pronoun "I" — vary sentence structure
+- Use active language and action verbs
+- This is a marketing tool — every sentence must earn its place
+- Reference specific skills or requirements from the job scope and draw connections to the candidate's credentials
+- Do NOT invent experience, companies, metrics, or qualifications not present in the resume JSON
+- Do NOT use personal pronouns at the start of every sentence
+- Avoid clichés ("I am passionate about...", "I am a team player...")
+- Write in NZ English (organisation not organization, etc.)
+
+STRICT RULES:
+- Use evidence from the resume JSON only
+- The total word count across opening + body_paragraph_1 + body_paragraph_2 + closing must not exceed 400 words
+- Return valid JSON matching the schema exactly
