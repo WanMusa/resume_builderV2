@@ -87,3 +87,15 @@ jobs:
     with:
       job_id: ${{ matrix.job_id }}
     secrets: inherit
+
+  stage4:
+    needs: [stage1, stage3]
+    if: ${{ needs.stage1.outputs.job_ids != '[]' && needs.stage1.outputs.job_ids != '' }}
+    strategy:
+      matrix:
+        job_id: ${{ fromJson(needs.stage1.outputs.job_ids) }}
+      fail-fast: false
+    uses: ./.github/workflows/stage4_render_upload.yml
+    with:
+      job_id: ${{ matrix.job_id }}
+    secrets: inherit

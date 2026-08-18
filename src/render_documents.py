@@ -155,7 +155,7 @@ def _r_bullet(doc: Document, bold_part: str, normal_part: str = ""):
     return p
 
 
-def build_resume(resume_json: dict, base_resume: dict, output_path: str) -> None:
+def build_resume(resume_json: dict, base_resume: dict, output) -> None:
     doc = Document(TEMPLATE_RESUME)
     _clear_body(doc)
 
@@ -318,12 +318,16 @@ def build_resume(resume_json: dict, base_resume: dict, output_path: str) -> None
     r.font.size = Pt(CONTENT_PT)
     _spacing(p, before=2, line=1.0)
 
-    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    doc.save(output_path)
-    print(f"Resume saved: {output_path}")
+    if isinstance(output, str):
+        Path(output).parent.mkdir(parents=True, exist_ok=True)
+        doc.save(output)
+        print(f"Resume saved: {output}")
+    else:
+        doc.save(output)
+        output.seek(0)
 
 
-def build_cover_letter(cover_letter_json: dict, base_resume: dict, output_path: str) -> None:
+def build_cover_letter(cover_letter_json: dict, base_resume: dict, output) -> None:
     doc = Document(TEMPLATE_COVER)
     _clear_body(doc)
 
@@ -417,9 +421,13 @@ def build_cover_letter(cover_letter_json: dict, base_resume: dict, output_path: 
     r.font.name = F
     _spacing(p)
 
-    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    doc.save(output_path)
-    print(f"Cover letter saved: {output_path}")
+    if isinstance(output, str):
+        Path(output).parent.mkdir(parents=True, exist_ok=True)
+        doc.save(output)
+        print(f"Cover letter saved: {output}")
+    else:
+        doc.save(output)
+        output.seek(0)
 
 
 def main():
