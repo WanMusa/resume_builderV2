@@ -1,46 +1,144 @@
 You are generating a tailored RESUME PARTIAL in NZ English.
 
-Return JSON only (no markdown, no explanation).
+Return JSON only.
+Do not return markdown.
+Do not provide explanations.
+Do not wrap the JSON in code fences.
 
-INPUTS:
-- Job scope JSON:
+INPUTS
+
+Job scope JSON:
 {job_scope_json}
 
-- Base resume JSON:
+Base resume JSON:
 {base_resume_json}
 
-TASK:
-Generate only these mutable sections:
-1- target_role_tags
-2- career_profile
-3- areas_of_expertise
-4- professional_experience (tailored summaries + tailored achievements)
+OBJECTIVE
 
-STRICT RULES:
-- Do NOT invent experience, tools, tenure, qualifications, outcomes, or metrics.
-- Keep identity/header/footer/education/certifications unchanged (they are fixed outside this step).
-- Optimise for ATS with natural keyword alignment, no stuffing.
-- Keep bullets concise and impact-focused.
-- Avoid "dash-joiner" style. Do not write clauses like " ... - enabling ... ".
-- Use evidence from base resume only; re-prioritise and reword truthfully.
-- If an item is not supported by base resume evidence, omit it.
-- Maintain chronology order matching base experience sequence.
+Generate a highly tailored resume section that maximises relevance to the target role while remaining completely truthful to the evidence contained within the base resume.
 
-OUTPUT FIELDS:
-- target_role_tags: 3-10 short tags
-- career_profile: concise paragraph tailored to role/seniority/domain
-- areas_of_expertise: 4-12 objects, each with:
-  - area: short bold label (e.g. "Agile Delivery & Backlog Management")
-  - description: one concise sentence explaining the capability (no em dashes)
-- professional_experience:
-  - title
-  - company
-  - period
-  - tailored_summary
-  - tailored_achievements (1-5): each as an object with:
-    - highlight: the key metric or outcome (bold portion), e.g. "Delivered an 8% revenue uplift"
-    - detail: the supporting context starting with "by" or "through", e.g. "by defining product requirements and leading delivery of a hybrid MVP"
-- ats_alignment:
-  - matched_keywords
-  - missing_keywords
-  - coverage_estimate (0.0 to 1.0).
+Optimise for:
+- ATS keyword alignment
+- Senior Product Manager roles
+- Product Owner roles
+- Technical Product Manager roles
+- Strategic Delivery roles
+- Digital Product roles
+- Data and AI product roles
+
+GENERAL RULES
+
+- Do NOT invent experience, responsibilities, tools, technologies, qualifications, outcomes, revenue figures, team sizes, certifications, achievements or metrics.
+- Use evidence from the base resume only.
+- Re-prioritise, summarise and reword truthfully.
+- If evidence does not exist, omit it.
+- Never create implied achievements or inferred outcomes.
+- Maintain chronology and experience order exactly as supplied.
+- Use NZ English spelling.
+- Keep wording concise, executive-level and impact-focused.
+- Avoid buzzword stuffing.
+- Avoid generic statements.
+- Avoid excessive technical jargon unless highly relevant to the target role.
+- Avoid dash-joiner phrasing.
+
+ROLE POSITIONING RULES
+
+Where evidence supports it:
+
+- Position the candidate as a Product Manager, Product Owner or Strategic Delivery professional rather than a requirements-focused Business Analyst.
+- Emphasise product ownership, roadmap ownership, prioritisation, customer value, business outcomes, commercial impact, stakeholder leadership, product discovery, delivery leadership and strategic influence.
+- Do not overemphasise documentation activities unless directly relevant to the target role.
+
+TECHNICAL PRODUCT MANAGEMENT RULES
+
+The candidate has strong technical expertise which is a differentiator.
+
+Where relevant to the target role, highlight evidence involving:
+
+- AI and machine learning solutions
+- AWS services
+- Azure services
+- APIs and integrations
+- Data platforms
+- Analytics products
+- Enterprise systems
+- Cloud platforms
+- SaaS architecture
+- Data quality and governance
+- Platform scalability
+
+Present technical expertise as product leadership capability rather than engineering implementation.
+
+The emphasis should be:
+- why the initiative mattered
+- business impact
+- customer value
+- strategic reasoning
+- product leadership
+
+while preserving relevant technical credibility.
+
+ACHIEVEMENT SELECTION RULES
+
+Select only the strongest achievements for the target role.
+
+Prefer achievements demonstrating:
+
+- Revenue growth
+- Cost reduction
+- Product adoption
+- Customer outcomes
+- Operational improvement
+- Strategic impact
+- AI enablement
+- Data-driven decision-making
+- Platform scalability
+- Risk reduction
+- Enterprise transformation
+- Delivery leadership
+
+SUPPORTING DETAILS RULES
+
+Achievements may contain supporting_details, evidence, project_details, responsibilities, outcomes, technologies, business_problem, stakeholders and capabilities.
+
+Use them to strengthen tailoring, surface relevant keywords, refine wording and adapt emphasis.
+
+CAREER PROFILE RULES
+
+- Maximum 120 words.
+- Focus on value proposition.
+- Highlight the most relevant capabilities for the target role.
+- Lead with strengths supported by evidence.
+- Emphasise business impact, product leadership and strategic contribution.
+- Include technical product expertise where relevant.
+
+AREAS OF EXPERTISE RULES
+
+Select between 4 and 12 expertise areas.
+
+EXPERIENCE TAILORING RULES
+
+For each role:
+- Create a tailored_summary.
+- Create 1 to 5 tailored_achievements.
+- Select achievements most relevant to the target role.
+- Preserve factual accuracy.
+
+ATS ALIGNMENT RULES
+
+Compare the generated resume against the supplied job scope.
+
+OUTPUT JSON STRUCTURE
+
+{
+  "target_role_tags": [],
+  "career_profile": "",
+  "areas_of_expertise": [],
+  "professional_experience": [],
+  "ats_alignment": {
+    "matched_keywords": [],
+    "missing_keywords": [],
+    "coverage_estimate": 0.0
+  },
+  "evidence_used": []
+}
