@@ -44,9 +44,10 @@ def main():
         prompt_tmpl = load_text("prompts/prompt3_generate_cover_letter.txt")
         schema = load_json("schemas/cover_letter.schema.json")
 
-        prompt = prompt_tmpl.format(
-            job_scope_json=json.dumps(job_scope, ensure_ascii=False),
-            resume_json=json.dumps(resume_json, ensure_ascii=False)
+        prompt = (
+            prompt_tmpl
+            .replace("{job_scope_json}", json.dumps(job_scope, ensure_ascii=False))
+            .replace("{resume_json}", json.dumps(resume_json, ensure_ascii=False))
         )
 
         backend = get_backend("generate_cover_letter")

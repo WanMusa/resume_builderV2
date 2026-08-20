@@ -14,6 +14,25 @@ def load_json(path: str):
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
+def _slim_base_resume(base_resume: dict) -> dict:
+    """
+    Strip supporting_details from achievements before building the prompt.
+    The achievement text alone is sufficient for the LLM; supporting_details
+    is rich human context but bloats the prompt past the context window limit.
+    """
+    import copy
+    slim = copy.deepcopy(base_resume)
+    for role in slim.get("base_sections", {}).get("professional_experience", []):
+        slimmed = []
+        for ach in role.get("achievements", []):
+            if isinstance(ach, dict):
+                slimmed.append(ach.get("achievement", ""))
+            else:
+                slimmed.append(ach)
+        role["achievements"] = slimmed
+    return slim
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--job-id", required=True)
@@ -44,10 +63,12 @@ def main():
         prompt_tmpl = load_text("prompts/prompt2_generate_resume_partial.txt")
         schema = load_json("schemas/resume_partial.schema.json")
         base_resume = load_json("assets/base_resume.json")
+        slim_resume = _slim_base_resume(base_resume)
 
-        prompt = prompt_tmpl.format(
-            job_scope_json=json.dumps(job_scope, ensure_ascii=False),
-            base_resume_json=json.dumps(base_resume, ensure_ascii=False)
+        prompt = (
+            prompt_tmpl
+            .replace("{job_scope_json}", json.dumps(job_scope, ensure_ascii=False))
+            .replace("{base_resume_json}", json.dumps(slim_resume, ensure_ascii=False))
         )
 
         backend = get_backend("generate_resume")

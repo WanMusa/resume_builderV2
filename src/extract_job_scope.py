@@ -40,7 +40,11 @@ def main():
         prompt_tmpl = load_text("prompts/prompt1_extract_job_scope.txt")
         schema = load_json("schemas/job_scope.schema.json")
 
-        prompt = prompt_tmpl.format(job_link=link, page_content=page_html)
+        prompt = (
+            prompt_tmpl
+            .replace("{job_link}", link)
+            .replace("{page_content}", page_html)
+        )
 
         backend = get_backend("extract")
         job_scope = backend.complete(prompt=prompt, json_schema=schema)
