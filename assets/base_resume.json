@@ -15,7 +15,7 @@
         "details": "Specialisation: Risk Management, Innovation, Corporate Sustainability"
       },
       {
-        "qualification": "Bachelor of Science (Urban Planning)",
+        "qualification": "Bachelor of Science",
         "institution": "IIUM, Malaysia",
         "period": "2007 – 2012",
         "details": ""
@@ -55,6 +55,7 @@
         "company": "Map of Ag",
         "location": "Auckland, NZ",
         "period": "Jul 2025 – Present",
+        "platform_description": "Big data ingestion platform that standardizes farm data across multiple sources and formats (DIF files, APIs, databases) into a universal ICAR-compliant schema, enabling data consumption, interoperability and traceability across the agricultural supply chain.",
         "summary": "Drive innovation through the development of AI-powered solutions using AWS Bedrock, including fertiliser intelligence and natural language analytics platforms that convert complex agricultural and operational data into actionable insights. Enhance security, user accessibility and customer experience for more than 8,000 farm connections by leading the implementation of Single Sign-On (SSO) across four integrated SaaS platforms. Accelerate delivery of customer-focused solutions by partnering with stakeholders, engineering teams and end users to define product strategy, prioritise high-value initiatives and translate business requirements into successful product outcomes.",
         "achievements": [
           {
@@ -121,6 +122,7 @@
         "company": "Vulcan Steel Ltd",
         "location": "Auckland, NZ",
         "period": "Aug 2023 – Jul 2025",
+        "platform_description": "In-house Order Management System (OMS) and CRM platform managing the complexity of metal orders, movement and storage. Steel and metals involve selling by weight and length, complex processing, extrusion requirements, and delivery of heavy loads, requiring specialized fulfillment and inventory logic.",
         "summary": "Owned backlog prioritisation, roadmap execution and requirements delivery for Anvil, an in-house Order Management System (OMS) and CRM platform supporting critical sales and fulfilment operations. Partnered with business stakeholders, engineering teams and technology vendors to define product improvements, optimise operational processes and deliver strategic initiatives that improved revenue, customer experience and operational efficiency.",
         "achievements": [
           {
@@ -178,6 +180,7 @@
         "company": "Triquestra International",
         "location": "Auckland, NZ",
         "period": "Feb 2021 – Jul 2023",
+        "platform_description": "Multi-module full POS system integrating with external systems including loyalty, rules-based pricing (discounts), fuel sales, and marketing modules. Connects with POS terminals, SAP, and third-party loyalty platforms to deliver unified customer engagement for retail organizations.",
         "summary": "Owned product backlogs, prioritisation and feature delivery for a SaaS customer engagement platform, partnering with retail clients, engineering teams and third-party technology providers to deliver scalable solutions that improved customer experience, marketing effectiveness and operational performance. Led product discovery, requirements definition and release planning activities, ensuring product investments aligned with client objectives, user needs and technical feasibility.",
         "achievements": [
           {
@@ -239,6 +242,7 @@
         "company": "Fusionex Ltd",
         "location": "APAC",
         "period": "Jun 2017 – Oct 2019",
+        "platform_description": "Alibaba fulfillment centre in Kuala Lumpur managing high-volume order processing, warehouse operations and logistics for e-commerce customers.",
         "summary": "Improved team velocity and delivery lead times by serving as Scrum Master for IoT and software development teams. Gathered and translated business requirements into user stories and functional specifications, ensuring successful solution delivery. Facilitated backlog refinement, sprint planning and stakeholder engagement to align product outcomes with business objectives.",
         "achievements": [
           "Reduced licensing approval times by 25%; delivered SaaS solutions that automated workflows for public sector clients."
