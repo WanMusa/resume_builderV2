@@ -64,6 +64,11 @@
         "missing_keywords": { "type": "array", "items": { "type": "string" }, "default": [] },
         "coverage_estimate": { "type": "number" }
       }
+    },
+    "evidence_used": {
+      "type": "array",
+      "default": [],
+      "items": { "type": "string" }
     }
   }
 }

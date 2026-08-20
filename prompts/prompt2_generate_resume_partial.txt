@@ -131,14 +131,26 @@ Compare the generated resume against the supplied job scope.
 OUTPUT JSON STRUCTURE
 
 {
-  "target_role_tags": [],
-  "career_profile": "",
-  "areas_of_expertise": [],
-  "professional_experience": [],
+  "target_role_tags": ["string", "..."],
+  "career_profile": "string (max 120 words)",
+  "areas_of_expertise": [
+    { "area": "Short bold label", "description": "One concise sentence explaining the capability." }
+  ],
+  "professional_experience": [
+    {
+      "title": "string",
+      "company": "string",
+      "period": "string",
+      "tailored_summary": "string",
+      "tailored_achievements": [
+        { "highlight": "Key metric or outcome (the bold portion)", "detail": "Supporting context starting with 'by' or 'through'" }
+      ]
+    }
+  ],
   "ats_alignment": {
-    "matched_keywords": [],
-    "missing_keywords": [],
+    "matched_keywords": ["string"],
+    "missing_keywords": ["string"],
     "coverage_estimate": 0.0
   },
-  "evidence_used": []
+  "evidence_used": ["brief reference to each base resume item used"]
 }
