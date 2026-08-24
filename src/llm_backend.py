@@ -2,61 +2,26 @@ import json
 import os
 import re
 import subprocess
-from dataclasses import dataclass
 from typing import Protocol, Dict, Any
 
 from jsonschema import validate
 
 
-@dataclass
-class LLMConfig:
-    backend: str
-    model: str
-
+# ── Protocol ──────────────────────────────────────────────────────────────────
 
 class LLMBackend(Protocol):
     def complete(self, prompt: str, json_schema: Dict[str, Any]) -> Dict[str, Any]:
         ...
 
 
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
 def _strip_code_fences(text: str) -> str:
     t = text.strip()
-    # ```json ... ``` or ``` ... ```
     if t.startswith("```"):
         t = re.sub(r"^```(?:json)?\s*", "", t, flags=re.IGNORECASE)
         t = re.sub(r"\s*```$", "", t)
     return t.strip()
-
-
-class CopilotCLIBackend:
-    def __init__(self, model: str):
-        self.model = model
-
-    def complete(self, prompt: str, json_schema: Dict[str, Any]) -> Dict[str, Any]:
-        env = os.environ.copy()
-        cmd = [
-            "copilot",
-            "-p",
-            prompt,
-            "-s",
-            f"--model={self.model}",
-            "--no-ask-user",
-        ]
-        result = subprocess.run(cmd, capture_output=True, text=True, env=env)
-
-        if result.returncode != 0:
-            raise RuntimeError(
-                f"Copilot CLI failed (exit {result.returncode}): {result.stderr.strip()}"
-            )
-
-        raw = _strip_code_fences(result.stdout)
-        try:
-            data = json.loads(raw)
-        except json.JSONDecodeError as e:
-            raise RuntimeError(f"Copilot output is not valid JSON: {e}\nOutput:\n{result.stdout}") from e
-
-        validate(instance=data, schema=json_schema)
-        return data
 
 
 def _load_config() -> Dict[str, Any]:
@@ -64,15 +29,206 @@ def _load_config() -> Dict[str, Any]:
         return json.load(f)
 
 
-def get_backend(stage_name: str) -> LLMBackend:
-    cfg = _load_config()
-    stage_cfg = cfg.get(stage_name)
-    if not stage_cfg:
-        raise RuntimeError(f"Missing config for stage '{stage_name}' in config.json")
+def _resolve_api_key(provider_name: str, provider_cfg: Dict[str, Any]) -> str:
+    env_var = provider_cfg.get("api_key_env")
+    if not env_var:
+        raise RuntimeError(f"Provider '{provider_name}' missing 'api_key_env' in config.json")
+    key = os.getenv(env_var)
+    if not key:
+        raise RuntimeError(
+            f"Environment variable '{env_var}' is not set. "
+            f"Add it to your .env file or GitHub Actions secrets."
+        )
+    return key
 
-    backend = stage_cfg.get("backend")
+
+# ── Provider implementations ──────────────────────────────────────────────────
+
+class CopilotCLIBackend:
+    """GitHub Copilot CLI — uses the CLI's own authenticated session, no API key needed."""
+
+    def __init__(self, model: str):
+        self.model = model
+
+    def complete(self, prompt: str, json_schema: Dict[str, Any]) -> Dict[str, Any]:
+        cmd = [
+            "copilot", "-p", prompt, "-s",
+            f"--model={self.model}",
+            "--no-ask-user",
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True, env=os.environ.copy())
+        if result.returncode != 0:
+            raise RuntimeError(
+                f"Copilot CLI failed (exit {result.returncode}): {result.stderr.strip()}"
+            )
+        raw = _strip_code_fences(result.stdout)
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError as e:
+            raise RuntimeError(
+                f"Copilot output is not valid JSON: {e}\nOutput:\n{result.stdout}"
+            ) from e
+        validate(instance=data, schema=json_schema)
+        return data
+
+
+class OpenAIBackend:
+    """OpenAI-compatible REST API (OpenAI, Azure OpenAI, any OpenAI-compatible endpoint)."""
+
+    def __init__(self, model: str, api_key: str, base_url: str):
+        self.model = model
+        self.api_key = api_key
+        self.base_url = base_url.rstrip("/")
+
+    def complete(self, prompt: str, json_schema: Dict[str, Any]) -> Dict[str, Any]:
+        import urllib.request
+
+        payload = json.dumps({
+            "model": self.model,
+            "response_format": {"type": "json_object"},
+            "messages": [{"role": "user", "content": prompt}],
+        }).encode()
+
+        req = urllib.request.Request(
+            f"{self.base_url}/chat/completions",
+            data=payload,
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            },
+        )
+        with urllib.request.urlopen(req) as resp:
+            body = json.loads(resp.read())
+
+        raw = body["choices"][0]["message"]["content"]
+        data = json.loads(_strip_code_fences(raw))
+        validate(instance=data, schema=json_schema)
+        return data
+
+
+class GeminiBackend:
+    """Google Gemini via REST API with native JSON mode (no markdown wrapping)."""
+
+    def __init__(self, model: str, api_key: str, json_mode: bool = True):
+        self.model = model
+        self.api_key = api_key
+        self.json_mode = json_mode
+
+    def complete(self, prompt: str, json_schema: Dict[str, Any]) -> Dict[str, Any]:
+        import urllib.request
+
+        generation_config: Dict[str, Any] = {}
+        if self.json_mode:
+            generation_config["response_mime_type"] = "application/json"
+
+        payload = json.dumps({
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": generation_config,
+        }).encode()
+
+        url = (
+            f"https://generativelanguage.googleapis.com/v1beta/models/"
+            f"{self.model}:generateContent?key={self.api_key}"
+        )
+        req = urllib.request.Request(
+            url, data=payload, headers={"Content-Type": "application/json"}
+        )
+        with urllib.request.urlopen(req) as resp:
+            body = json.loads(resp.read())
+
+        raw = body["candidates"][0]["content"]["parts"][0]["text"]
+        data = json.loads(_strip_code_fences(raw))
+        validate(instance=data, schema=json_schema)
+        return data
+
+
+class AnthropicBackend:
+    """Anthropic Claude via Messages API."""
+
+    def __init__(self, model: str, api_key: str):
+        self.model = model
+        self.api_key = api_key
+
+    def complete(self, prompt: str, json_schema: Dict[str, Any]) -> Dict[str, Any]:
+        import urllib.request
+
+        payload = json.dumps({
+            "model": self.model,
+            "max_tokens": 4096,
+            "messages": [{"role": "user", "content": prompt}],
+        }).encode()
+
+        req = urllib.request.Request(
+            "https://api.anthropic.com/v1/messages",
+            data=payload,
+            headers={
+                "x-api-key": self.api_key,
+                "anthropic-version": "2023-06-01",
+                "Content-Type": "application/json",
+            },
+        )
+        with urllib.request.urlopen(req) as resp:
+            body = json.loads(resp.read())
+
+        raw = body["content"][0]["text"]
+        data = json.loads(_strip_code_fences(raw))
+        validate(instance=data, schema=json_schema)
+        return data
+
+
+# ── Factory ───────────────────────────────────────────────────────────────────
+
+def get_backend(stage_name: str) -> LLMBackend:
+    """
+    Resolve the correct LLM backend for a pipeline stage from config.json.
+
+    config.json structure:
+      providers.<name>  — connection details (api_key_env, base_url, feature flags)
+      stages.<stage>    — which provider + model to use for this stage
+    """
+    cfg = _load_config()
+
+    stage_cfg = cfg.get("stages", {}).get(stage_name)
+    if not stage_cfg:
+        raise RuntimeError(f"No stage config for '{stage_name}' in config.json")
+
+    provider_name = stage_cfg.get("provider")
     model = stage_cfg.get("model")
-    if backend == "copilot_cli":
+    if not provider_name or not model:
+        raise RuntimeError(
+            f"Stage '{stage_name}' must specify both 'provider' and 'model' in config.json"
+        )
+
+    provider_cfg = cfg.get("providers", {}).get(provider_name)
+    if provider_cfg is None:
+        raise RuntimeError(
+            f"Provider '{provider_name}' not found in config.json providers section"
+        )
+
+    if provider_name == "copilot_cli":
         return CopilotCLIBackend(model=model)
 
-    raise RuntimeError(f"Unsupported backend '{backend}' for stage '{stage_name}'")
+    if provider_name == "openai":
+        return OpenAIBackend(
+            model=model,
+            api_key=_resolve_api_key(provider_name, provider_cfg),
+            base_url=provider_cfg.get("base_url", "https://api.openai.com/v1"),
+        )
+
+    if provider_name == "gemini":
+        return GeminiBackend(
+            model=model,
+            api_key=_resolve_api_key(provider_name, provider_cfg),
+            json_mode=provider_cfg.get("json_mode", True),
+        )
+
+    if provider_name == "anthropic":
+        return AnthropicBackend(
+            model=model,
+            api_key=_resolve_api_key(provider_name, provider_cfg),
+        )
+
+    raise RuntimeError(
+        f"Unsupported provider '{provider_name}'. "
+        f"Add a class and an entry in get_backend() in llm_backend.py."
+    )

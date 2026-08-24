@@ -1,14 +1,32 @@
 {
-  "extract": {
-    "backend": "copilot_cli",
-    "model": "claude-sonnet-4.6"
+  "providers": {
+    "copilot_cli": {
+      "auth": "cli"
+    },
+    "openai": {
+      "api_key_env": "OPENAI_API_KEY",
+      "base_url": "https://api.openai.com/v1"
+    },
+    "gemini": {
+      "api_key_env": "GEMINI_API_KEY",
+      "json_mode": true
+    },
+    "anthropic": {
+      "api_key_env": "ANTHROPIC_API_KEY"
+    }
   },
-  "generate_resume": {
-    "backend": "copilot_cli",
-    "model": "claude-opus-4.5"
-  },
-  "generate_cover_letter": {
-    "backend": "copilot_cli",
-    "model": "claude-opus-4.5"
+  "stages": {
+    "extract": {
+      "provider": "copilot_cli",
+      "model": "claude-sonnet-4.6"
+    },
+    "generate_resume": {
+      "provider": "copilot_cli",
+      "model": "claude-opus-4.5"
+    },
+    "generate_cover_letter": {
+      "provider": "copilot_cli",
+      "model": "claude-opus-4.5"
+    }
   }
 }
