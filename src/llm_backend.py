@@ -1,3 +1,4 @@
+from datetime import time
 import json
 import os
 import re
@@ -130,11 +131,25 @@ class GeminiBackend:
             f"https://generativelanguage.googleapis.com/v1beta/models/"
             f"{self.model}:generateContent?key={self.api_key}"
         )
-        req = urllib.request.Request(
-            url, data=payload, headers={"Content-Type": "application/json"}
-        )
-        with urllib.request.urlopen(req) as resp:
-            body = json.loads(resp.read())
+        # --- Adding retry logic ---
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                req = urllib.request.Request(
+                    url, data=payload, headers={"Content-Type": "application/json"}
+                )
+                with urllib.request.urlopen(req) as resp:
+                    body = json.loads(resp.read())
+                break  # If successful, break out of the loop
+                
+            except urllib.error.HTTPError as e:
+                # If we get a 429 and haven't run out of retries, wait and try again
+                if e.code == 429 and attempt < max_retries - 1:
+                    print(f"⚠️ Hit Gemini rate limit (429). Waiting 35 seconds... (Attempt {attempt+1}/{max_retries})")
+                    time.sleep(35) # Wait for the minute-limit to reset
+                else:
+                    raise e # Re-raise the error if it's not a 429 or we are out of retries
+        # -----------------------
 
         raw = body["candidates"][0]["content"]["parts"][0]["text"]
         data = json.loads(_strip_code_fences(raw))
