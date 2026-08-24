@@ -119,7 +119,7 @@ class GeminiBackend:
 
         generation_config: Dict[str, Any] = {}
         if self.json_mode:
-            generation_config["response_mime_type"] = "application/json"
+            generation_config["responseMimeType"] = "application/json"
 
         payload = json.dumps({
             "contents": [{"parts": [{"text": prompt}]}],
