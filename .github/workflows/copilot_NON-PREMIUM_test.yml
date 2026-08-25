@@ -1,0 +1,66 @@
+name: Copilot Auto Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-copilot-auto:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      copilot-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Copilot CLI
+        run: npm install -g @github/copilot
+
+      - name: Verify Installation
+        run: |
+          copilot --version
+      
+      - name: Test Copilot Auto
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          output=$(copilot -p "Say hello" -s 2>&1)
+          echo "$output"
+          echo "Exit code: $?"
+
+      - name: Test Auto Model Selection
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          echo "Testing Copilot Auto mode..."
+          copilot -p "Respond with only the following JSON: {\"status\":\"success\",\"mode\":\"auto\"}" -s
+
+      - name: Test Resume Extraction Style Prompt
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          copilot -p "
+          Extract the following job description into JSON.
+
+          Return valid JSON only.
+
+          Job Description:
+          Senior Product Manager responsible for stakeholder engagement,
+          roadmap management, requirements gathering, AI product delivery,
+          and agile leadership.
+
+          Schema:
+          {
+            \"title\": \"string\",
+            \"skills\": [\"string\"],
+            \"responsibilities\": [\"string\"]
+          }
+          " -s

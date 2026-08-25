@@ -1,10 +1,12 @@
 from datetime import time
 import json
+import logging
 import urllib.request, urllib.error
 import os
 import re
 import subprocess
 import time as time_module
+import logging
 from typing import Protocol, Dict, Any
 
 from jsonschema import validate
@@ -178,17 +180,29 @@ class GroqBackend:
                 "Origin": "https://api.groq.com",
             },
         )
+        logging.info(f"Request payload: {payload_dict}")
+
         try:
             with urllib.request.urlopen(req) as resp:
                 body = json.loads(resp.read())
-        except urllib.error.HTTPError as e:
-            print("HTTP Status:", e.code)
-            print("Response Body:", e.read().decode("utf-8"))
-            print("URL:", e.url)
-            print("Status:", e.code)
-            print("Headers:", e.headers)
-            print("Body:", e.read().decode("utf-8", errors="ignore"))
-            raise
+
+        except (urllib.error.HTTPError, TypeError) as e:
+            logging.error(f"An API error occurred: {e}")
+            logging.error(f"Request payload: {payload_dict}")
+            logging.error(f"HTTP Status: {e.code}")
+            logging.error(f"Response URL: {e.url}")
+            logging.error(f"Response Headers: {e.headers}")
+            logging.error(f"HTTP Error: {e}")
+            raise e
+        #except urllib.error.HTTPError as e:
+        #    print("HTTP Status:", e.code)
+        #    print("Response Body:", e.read().decode("utf-8"))
+        #    print("URL:", e.url)
+        #    print("Status:", e.code)
+        #    print("Headers:", e.headers)
+        #    print("Body:", e.read().decode("utf-8", errors="ignore"))
+        #    logging.error(f"HTTP Error: {e}")
+        #    raise
 
         raw = body["choices"][0]["message"]["content"]
         data = json.loads(_strip_code_fences(raw))
