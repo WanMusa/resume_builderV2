@@ -169,8 +169,13 @@ class GroqBackend:
                 "Content-Type": "application/json",
             },
         )
-        with urllib.request.urlopen(req) as resp:
-            body = json.loads(resp.read())
+        try:
+            with urllib.request.urlopen(req) as resp:
+                body = json.loads(resp.read())
+        except urllib.error.HTTPError as e:
+            print("HTTP Status:", e.code)
+            print("Response Body:", e.read().decode("utf-8"))
+            raise
 
         raw = body["choices"][0]["message"]["content"]
         data = json.loads(_strip_code_fences(raw))
