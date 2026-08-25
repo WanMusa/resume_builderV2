@@ -3,6 +3,7 @@ import json
 import os
 import re
 import subprocess
+import time as time_module
 from typing import Protocol, Dict, Any
 
 from jsonschema import validate
@@ -132,6 +133,7 @@ class GeminiBackend:
             f"{self.model}:generateContent?key={self.api_key}"
         )
         # --- Adding retry logic ---
+        body = None
         max_retries = 3
         for attempt in range(max_retries):
             try:
@@ -146,9 +148,12 @@ class GeminiBackend:
                 # If we get a 429 and haven't run out of retries, wait and try again
                 if e.code == 429 and attempt < max_retries - 1:
                     print(f"⚠️ Hit Gemini rate limit (429). Waiting 35 seconds... (Attempt {attempt+1}/{max_retries})")
-                    time.sleep(35) # Wait for the minute-limit to reset
+                    time_module.sleep(35) # Wait for the minute-limit to reset
                 else:
-                    raise e # Re-raise the error if it's not a 429 or we are out of retries
+                    raise 
+        
+        if body is None:
+            raise RuntimeError("Gemini request failed after all retries")
         # -----------------------
 
         raw = body["candidates"][0]["content"]["parts"][0]["text"]
