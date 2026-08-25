@@ -139,6 +139,44 @@ class OpenAIBackend:
         validate(instance=data, schema=json_schema)
         return data
 
+class GroqBackend:
+    """Groq (configured Groq models)."""
+
+    def __init__(self, model: str, api_key: str, base_url: str):
+        self.model = model
+        self.api_key = api_key
+        self.base_url = base_url.rstrip("/")
+        self.json_mode = json_mode
+
+    def complete(self, prompt: str, json_schema: Dict[str, Any]) -> Dict[str, Any]:
+        import urllib.request
+
+        payload_dict: Dict[str, Any] = {
+            "model": self.model,
+            "messages": [{"role": "user", "content": prompt}],
+        }
+
+        if self.json_mode:
+            payload_dict["response_format"] = {"type": "json_object"}
+
+        payload = json.dumps(payload_dict).encode()
+
+        req = urllib.request.Request(
+            f"{self.base_url}/chat/completions",
+            data=payload,
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            },
+        )
+        with urllib.request.urlopen(req) as resp:
+            body = json.loads(resp.read())
+
+        raw = body["choices"][0]["message"]["content"]
+        data = json.loads(_strip_code_fences(raw))
+        validate(instance=data, schema=json_schema)
+        return data
+
 
 class GeminiBackend:
     """Google Gemini via REST API with native JSON mode (no markdown wrapping)."""
@@ -285,6 +323,14 @@ def get_backend(stage_name: str) -> LLMBackend:
             model=model,
             api_key=_resolve_api_key(provider_name, provider_cfg),
             base_url=provider_cfg.get("base_url", "https://openrouter.ai/api/v1"),
+        )
+
+    if provider_name == "groq":
+        return GroqBackend(
+            model=model,
+            api_key=_resolve_api_key(provider_name, provider_cfg),
+            base_url=provider_cfg.get("base_url", "https://api.groq.com/openai/v1"),
+            json_mode=provider_cfg.get("json_mode", True),
         )
 
     raise RuntimeError(
