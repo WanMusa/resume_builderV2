@@ -156,8 +156,8 @@ class GroqBackend:
             "messages": [{"role": "user", "content": prompt}],
         }
 
-        if self.json_mode:
-            payload_dict["response_format"] = {"type": "json_object"}
+        #if self.json_mode:
+        #    payload_dict["response_format"] = {"type": "json_object"}
 
         payload = json.dumps(payload_dict).encode()
 
