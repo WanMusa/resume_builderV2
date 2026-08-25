@@ -175,6 +175,10 @@ class GroqBackend:
         except urllib.error.HTTPError as e:
             print("HTTP Status:", e.code)
             print("Response Body:", e.read().decode("utf-8"))
+            print("URL:", e.url)
+            print("Status:", e.code)
+            print("Headers:", e.headers)
+            print("Body:", e.read().decode("utf-8", errors="ignore"))
             raise
 
         raw = body["choices"][0]["message"]["content"]
