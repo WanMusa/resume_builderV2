@@ -26,16 +26,16 @@
   },
   "stages": {
     "extract": {
-      "provider": "openrouter",
-      "model": "stealth/ox-alpha"
+      "provider": "groq",
+      "model": "llama-3.3-70b-versatile"
     },
     "generate_resume": {
-      "provider": "openrouter",
-      "model": "stealth/ox-alpha"
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b"
     },
     "generate_cover_letter": {
-      "provider": "openrouter",
-      "model": "stealth/ox-alpha"
+      "provider": "groq",
+      "model": "llama-3.3-70b-versatile"
     }
   }
 }
