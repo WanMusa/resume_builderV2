@@ -1,5 +1,6 @@
 from datetime import time
 import json
+import urllib.request, urllib.error
 import os
 import re
 import subprocess
@@ -149,24 +150,32 @@ class GroqBackend:
         self.json_mode = json_mode
 
     def complete(self, prompt: str, json_schema: Dict[str, Any]) -> Dict[str, Any]:
-        import urllib.request
+        #import urllib.request
 
         payload_dict: Dict[str, Any] = {
             "model": self.model,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": [
+                {"role": "system", "content": "You are a helpful assistant. Return JSON only."},
+                {"role": "user", "content": prompt}
+                ],
         }
 
-        #if self.json_mode:
-        #    payload_dict["response_format"] = {"type": "json_object"}
+        if self.json_mode:
+            payload_dict["response_format"] = {"type": "json_object"}
 
-        payload = json.dumps(payload_dict).encode()
+        data = json.dumps(payload_dict).encode()
 
         req = urllib.request.Request(
             f"{self.base_url}/chat/completions",
-            data=payload,
+            data=data,
             headers={
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json",
+                "Accept": "application/json",
+                # <<< NEW >>> give Cloudflare something to recognise as a legit client
+                "User-Agent": "github-actions/runner python-requests/2.32.0",
+                # (optional) origin can also help
+                "Origin": "https://api.groq.com",
             },
         )
         try:
