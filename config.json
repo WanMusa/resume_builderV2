@@ -7,6 +7,10 @@
       "api_key_env": "OPENAI_API_KEY",
       "base_url": "https://api.openai.com/v1"
     },
+    "openrouter": {
+      "api_key_env": "OPENROUTER_API_KEY",
+      "base_url": "https://openrouter.ai/api/v1"
+    },
     "gemini": {
       "api_key_env": "GEMINI_API_KEY",
       "json_mode": true
@@ -17,16 +21,16 @@
   },
   "stages": {
     "extract": {
-      "provider": "gemini",
-      "model": "gemini-3.7-flash"
+      "provider": "openrouter",
+      "model": "stealth/ox-alpha"
     },
     "generate_resume": {
-      "provider": "gemini",
-      "model": "gemini-3.1-pro-preview"
+      "provider": "openrouter",
+      "model": "stealth/ox-alpha"
     },
     "generate_cover_letter": {
-      "provider": "gemini",
-      "model": "gemini-3.7-flash"
+      "provider": "openrouter",
+      "model": "stealth/ox-alpha"
     }
   }
 }

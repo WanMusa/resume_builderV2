@@ -73,7 +73,39 @@ class CopilotCLIBackend:
         validate(instance=data, schema=json_schema)
         return data
 
+class OpenrouterBackend:
+    """OpenRouterAi"""
 
+    def __init__(self, model: str, api_key: str, base_url: str):
+        self.model = model
+        self.api_key = api_key
+        self.base_url = base_url.rstrip("/")
+
+    def complete(self, prompt: str, json_schema: Dict[str, Any]) -> Dict[str, Any]:
+        import urllib.request
+
+        payload = json.dumps({
+            "model": self.model,
+            "response_format": {"type": "json_object"},
+            "messages": [{"role": "user", "content": prompt}],
+        }).encode()
+
+        req = urllib.request.Request(
+            f"{self.base_url}/chat/completions",
+            data=payload,
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            },
+        )
+        with urllib.request.urlopen(req) as resp:
+            body = json.loads(resp.read())
+
+        raw = body["choices"][0]["message"]["content"]
+        data = json.loads(_strip_code_fences(raw))
+        validate(instance=data, schema=json_schema)
+        return data
+    
 class OpenAIBackend:
     """OpenAI-compatible REST API (OpenAI, Azure OpenAI, any OpenAI-compatible endpoint)."""
 
@@ -246,6 +278,13 @@ def get_backend(stage_name: str) -> LLMBackend:
         return AnthropicBackend(
             model=model,
             api_key=_resolve_api_key(provider_name, provider_cfg),
+        )
+
+    if provider_name == "openrouter":
+        return OpenrouterBackend(
+            model=model,
+            api_key=_resolve_api_key(provider_name, provider_cfg),
+            base_url=provider_cfg.get("base_url", "https://openrouter.ai/api/v1"),
         )
 
     raise RuntimeError(
