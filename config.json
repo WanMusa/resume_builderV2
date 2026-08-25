@@ -18,15 +18,15 @@
   "stages": {
     "extract": {
       "provider": "gemini",
-      "model": "gemini-flash-latest"
+      "model": "gemini-3.7-flash"
     },
     "generate_resume": {
       "provider": "gemini",
-      "model": "gemini-pro-latest"
+      "model": "gemini-3.1-pro-preview"
     },
     "generate_cover_letter": {
       "provider": "gemini",
-      "model": "gemini-flash-latest"
+      "model": "gemini-3.7-flash"
     }
   }
 }
