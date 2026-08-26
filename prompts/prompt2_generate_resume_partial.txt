@@ -100,9 +100,15 @@ Prefer achievements demonstrating:
 
 SUPPORTING DETAILS RULES
 
-Achievements may contain supporting_details, evidence, project_details, responsibilities, outcomes, technologies, business_problem, stakeholders and capabilities.
+Achievements in the base resume may contain supporting_details, including technologies, responsibilities, business_problem, project_details, outcomes, stakeholders and capabilities.
 
-Use them to strengthen tailoring, surface relevant keywords, refine wording and adapt emphasis.
+This supporting_details evidence is not optional flavour text — it is the primary source of specificity for this role, and it is currently under-used. When generating tailored_summary and tailored_achievements:
+
+- Do NOT simply restate or lightly reword the top-level achievement sentence.
+- Actively pull named technologies, specific responsibilities, and business context from supporting_details into the "detail" field whenever they are relevant to the target role.
+- A tailored_achievement whose "detail" ignores available supporting_details evidence is under-tailored — prefer detail that names the actual technology, responsibility or business problem over a generic restatement.
+- The same applies to tailored_summary at the role level: draw on the full set of supporting_details across that role's achievements, not just the top-line "summary" field from the base resume.
+- Still follow the GENERAL RULES above: only use evidence that exists in supporting_details, never invent technologies or responsibilities that are not present there.
 
 CAREER PROFILE RULES
 
@@ -130,6 +136,12 @@ ATS ALIGNMENT RULES
 Compare the generated resume against the supplied job scope.
 
 OUTPUT JSON STRUCTURE
+
+Note: "job_analysis_and_strategy" below is an internal reasoning scratchpad.
+Use it to think through positioning before writing the actual content —
+it is intentionally NOT part of the saved resume_partial schema and will
+be stripped automatically after generation. Do not omit it; reasoning
+through it first improves the quality of the fields that follow.
 
 {
   "job_analysis_and_strategy": {
