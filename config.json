@@ -26,16 +26,16 @@
   },
   "stages": {
     "extract": {
-      "provider": "gemini",
-      "model": "gemini-pro-latest"
+      "provider": "groq",
+      "model": "qwen/qwen3.6-27b"
     },
     "generate_resume": {
       "provider": "gemini",
-      "model": "gemini-pro-latest"
+      "model": "qwen/qwen3.6-27b"
     },
     "generate_cover_letter": {
       "provider": "gemini",
-      "model": "gemini-pro-latest"
+      "model": "qwen/qwen3.6-27b"
     }
   }
 }
