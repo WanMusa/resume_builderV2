@@ -192,8 +192,18 @@ class GroqBackend:
         )
         logging.info(f"Request payload: {payload_dict}")
 
-        with urllib.request.urlopen(req) as resp:
-            return json.loads(resp.read())
+        try: 
+            with urllib.request.urlopen(req) as resp:
+                return json.loads(resp.read())
+
+        except urllib.error.HTTPError as e:
+            logging.error(f"HTTP Status: {e.code}")
+            try:
+                error_body = e.read().decode("utf-8", errors="replace")
+                logging.error(f"HTTP Body: {error_body}")
+            except Exception:
+                logging.error("Could not read error body")
+            raise
 
     def complete(self, prompt: str, json_schema: Dict[str, Any]) -> Dict[str, Any]:
         base_payload: Dict[str, Any] = {
@@ -235,7 +245,14 @@ class GroqBackend:
                 except (urllib.error.HTTPError, TypeError) as e2:
                     logging.error(f"An API error occurred: {e2}")
                     logging.error(f"Request payload: {fallback_payload}")
+
+                    try:
+                        body = e2.read().decode("utf-8", errors="replace")
+                        logging.error(f"Response body: {body}")
+                    except Exception:
+                        pass
                     raise e2
+                
             except TypeError as e:
                 logging.error(f"An API error occurred: {e}")
                 logging.error(f"Request payload: {schema_payload}")
