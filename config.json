@@ -21,7 +21,7 @@
     "groq": { 
       "api_key_env": "GROQ_API_KEY",
       "base_url": "https://api.groq.com/openai/v1",
-      "json_mode": true
+      "json_mode": false
     }
   },
   "stages": {
