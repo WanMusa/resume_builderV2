@@ -91,6 +91,7 @@ Prefer achievements demonstrating:
 - Operational improvement
 - Strategic impact
 - AI enablement
+- Technical Acumen
 - Data-driven decision-making
 - Platform scalability
 - Risk reduction
