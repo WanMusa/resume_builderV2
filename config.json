@@ -27,7 +27,7 @@
   "stages": {
     "extract": {
       "provider": "groq",
-      "model": "groq/compound-mini"
+      "model": "openai/gpt-oss-120b"
     },
     "generate_resume": {
       "provider": "groq",

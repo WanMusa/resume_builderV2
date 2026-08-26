@@ -1,0 +1,189 @@
+diff --git a/src/llm_backend.py b/src/llm_backend.py
+index 2802a45..8f35eda 100644
+--- a/src/llm_backend.py
++++ b/src/llm_backend.py
+@@ -29,6 +29,24 @@ def _strip_code_fences(text: str) -> str:
+     return t.strip()
+ 
+ 
++def _drop_unexpected_top_level_keys(data: Dict[str, Any], json_schema: Dict[str, Any]) -> Dict[str, Any]:
++    """
++    Best-effort schema mode isn't a hard guarantee — models can still add
++    an extra top-level key here and there. If the schema forbids extras
++    (additionalProperties: false) and the model added one anyway, drop it
++    rather than failing the whole job when every actually-required field
++    is present and valid.
++    """
++    if json_schema.get("additionalProperties") is not False:
++        return data
++    allowed = set(json_schema.get("properties", {}).keys())
++    dropped = [k for k in data.keys() if k not in allowed]
++    if dropped:
++        logging.warning(f"Dropping unexpected top-level key(s) from LLM output: {dropped}")
++        data = {k: v for k, v in data.items() if k in allowed}
++    return data
++
++
+ def _load_config() -> Dict[str, Any]:
+     with open("config.json", "r", encoding="utf-8") as f:
+         return json.load(f)
+@@ -73,6 +91,7 @@ class CopilotCLIBackend:
+             raise RuntimeError(
+                 f"Copilot output is not valid JSON: {e}\nOutput:\n{result.stdout}"
+             ) from e
++        data = _drop_unexpected_top_level_keys(data, json_schema)
+         validate(instance=data, schema=json_schema)
+         return data
+ 
+@@ -106,6 +125,7 @@ class OpenrouterBackend:
+ 
+         raw = body["choices"][0]["message"]["content"]
+         data = json.loads(_strip_code_fences(raw))
++        data = _drop_unexpected_top_level_keys(data, json_schema)
+         validate(instance=data, schema=json_schema)
+         return data
+     
+@@ -139,6 +159,7 @@ class OpenAIBackend:
+ 
+         raw = body["choices"][0]["message"]["content"]
+         data = json.loads(_strip_code_fences(raw))
++        data = _drop_unexpected_top_level_keys(data, json_schema)
+         validate(instance=data, schema=json_schema)
+         return data
+ 
+@@ -151,20 +172,11 @@ class GroqBackend:
+         self.base_url = base_url.rstrip("/")
+         self.json_mode = json_mode
+ 
+-    def complete(self, prompt: str, json_schema: Dict[str, Any]) -> Dict[str, Any]:
+-        #import urllib.request
+-
+-        payload_dict: Dict[str, Any] = {
+-            "model": self.model,
+-            "messages": [
+-                {"role": "system", "content": "You are a helpful assistant. Return JSON only."},
+-                {"role": "user", "content": prompt}
+-                ],
+-        }
+-
+-        if self.json_mode:
+-            payload_dict["response_format"] = {"type": "json_object"}
++    def _schema_name(self, json_schema: Dict[str, Any]) -> str:
++        title = json_schema.get("title", "response")
++        return re.sub(r"[^a-zA-Z0-9_]", "_", title).lower() or "response"
+ 
++    def _post(self, payload_dict: Dict[str, Any]) -> Dict[str, Any]:
+         data = json.dumps(payload_dict).encode()
+ 
+         req = urllib.request.Request(
+@@ -174,38 +186,71 @@ class GroqBackend:
+                 "Authorization": f"Bearer {self.api_key}",
+                 "Content-Type": "application/json",
+                 "Accept": "application/json",
+-                # <<< NEW >>> give Cloudflare something to recognise as a legit client
+                 "User-Agent": "github-actions/runner python-requests/2.32.0",
+-                # (optional) origin can also help
+                 "Origin": "https://api.groq.com",
+             },
+         )
+         logging.info(f"Request payload: {payload_dict}")
+ 
+-        try:
+-            with urllib.request.urlopen(req) as resp:
+-                body = json.loads(resp.read())
+-
+-        except (urllib.error.HTTPError, TypeError) as e:
+-            logging.error(f"An API error occurred: {e}")
+-            logging.error(f"Request payload: {payload_dict}")
+-            logging.error(f"HTTP Status: {e.code}")
+-            logging.error(f"Response URL: {e.url}")
+-            logging.error(f"Response Headers: {e.headers}")
+-            logging.error(f"HTTP Error: {e}")
+-            raise e
+-        #except urllib.error.HTTPError as e:
+-        #    print("HTTP Status:", e.code)
+-        #    print("Response Body:", e.read().decode("utf-8"))
+-        #    print("URL:", e.url)
+-        #    print("Status:", e.code)
+-        #    print("Headers:", e.headers)
+-        #    print("Body:", e.read().decode("utf-8", errors="ignore"))
+-        #    logging.error(f"HTTP Error: {e}")
+-        #    raise
++        with urllib.request.urlopen(req) as resp:
++            return json.loads(resp.read())
++
++    def complete(self, prompt: str, json_schema: Dict[str, Any]) -> Dict[str, Any]:
++        base_payload: Dict[str, Any] = {
++            "model": self.model,
++            "messages": [
++                {"role": "system", "content": "You are a helpful assistant. Return JSON only."},
++                {"role": "user", "content": prompt}
++            ],
++        }
++
++        if self.json_mode:
++            # Prefer Groq's schema-aware structured outputs (best-effort
++            # mode) over plain JSON mode — this gives the model the actual
++            # schema to follow instead of relying only on the prompt text,
++            # and catches malformed output before it reaches local
++            # validation. Not all models support it (e.g. compound-mini),
++            # so we fall back to json_object automatically on rejection.
++            schema_payload = dict(base_payload)
++            schema_payload["response_format"] = {
++                "type": "json_schema",
++                "json_schema": {
++                    "name": self._schema_name(json_schema),
++                    "strict": False,
++                    "schema": json_schema,
++                },
++            }
++
++            try:
++                body = self._post(schema_payload)
++            except urllib.error.HTTPError as e:
++                logging.warning(
++                    f"json_schema response_format rejected for model {self.model} "
++                    f"(HTTP {e.code}); falling back to json_object mode."
++                )
++                fallback_payload = dict(base_payload)
++                fallback_payload["response_format"] = {"type": "json_object"}
++                try:
++                    body = self._post(fallback_payload)
++                except (urllib.error.HTTPError, TypeError) as e2:
++                    logging.error(f"An API error occurred: {e2}")
++                    logging.error(f"Request payload: {fallback_payload}")
++                    raise e2
++            except TypeError as e:
++                logging.error(f"An API error occurred: {e}")
++                logging.error(f"Request payload: {schema_payload}")
++                raise e
++        else:
++            try:
++                body = self._post(base_payload)
++            except (urllib.error.HTTPError, TypeError) as e:
++                logging.error(f"An API error occurred: {e}")
++                logging.error(f"Request payload: {base_payload}")
++                raise e
+ 
+         raw = body["choices"][0]["message"]["content"]
+         data = json.loads(_strip_code_fences(raw))
++        data = _drop_unexpected_top_level_keys(data, json_schema)
+         validate(instance=data, schema=json_schema)
+         return data
+ 
+@@ -260,6 +305,7 @@ class GeminiBackend:
+ 
+         raw = body["candidates"][0]["content"]["parts"][0]["text"]
+         data = json.loads(_strip_code_fences(raw))
++        data = _drop_unexpected_top_level_keys(data, json_schema)
+         validate(instance=data, schema=json_schema)
+         return data
+ 
+@@ -294,6 +340,7 @@ class AnthropicBackend:
+ 
+         raw = body["content"][0]["text"]
+         data = json.loads(_strip_code_fences(raw))
++        data = _drop_unexpected_top_level_keys(data, json_schema)
+         validate(instance=data, schema=json_schema)
+         return data
+ 
