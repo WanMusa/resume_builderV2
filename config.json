@@ -26,16 +26,16 @@
   },
   "stages": {
     "extract": {
-      "provider": "groq",
-      "model": "openai/gpt-oss-120b"
+      "provider": "openrouter",
+      "model": "z-ai/glm-5.2:free"
     },
     "generate_resume": {
-      "provider": "groq",
-      "model": "openai/gpt-oss-120b"
+      "provider": "openrouter",
+      "model": "z-ai/glm-5.2:free"
     },
     "generate_cover_letter": {
-      "provider": "groq",
-      "model": "openai/gpt-oss-120b"
+      "provider": "openrouter",
+      "model": "z-ai/glm-5.2:free"
     }
   }
 }
