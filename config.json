@@ -27,15 +27,15 @@
   "stages": {
     "extract": {
       "provider": "openrouter",
-      "model": "z-ai/glm-5.2:free"
+      "model": "moonshotai/kimi-k3"
     },
     "generate_resume": {
       "provider": "openrouter",
-      "model": "z-ai/glm-5.2:free"
+      "model": "moonshotai/kimi-k3"
     },
     "generate_cover_letter": {
       "provider": "openrouter",
-      "model": "z-ai/glm-5.2:free"
+      "model": "moonshotai/kimi-k3"
     }
   }
 }
