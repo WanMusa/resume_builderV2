@@ -26,16 +26,16 @@
   },
   "stages": {
     "extract": {
-      "provider": "openrouter",
-      "model": "moonshotai/kimi-k3"
+      "provider": "gemini",
+      "model": "gemini-pro-latest"
     },
     "generate_resume": {
-      "provider": "openrouter",
-      "model": "moonshotai/kimi-k3"
+      "provider": "gemini",
+      "model": "gemini-pro-latest"
     },
     "generate_cover_letter": {
-      "provider": "openrouter",
-      "model": "moonshotai/kimi-k3"
+      "provider": "gemini",
+      "model": "gemini-pro-latest"
     }
   }
 }
