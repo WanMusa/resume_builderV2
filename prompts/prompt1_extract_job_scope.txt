@@ -4,7 +4,7 @@ Task:
 Extract the job scope from the posting at this URL:
 {job_link}
 
-Source content (HTML or page text):
+Source content (cleaned page text, tags and boilerplate already stripped):
 {page_content}
 
 Return ONLY valid JSON (no markdown, no explanation) that matches this schema intent:
@@ -15,9 +15,9 @@ Return ONLY valid JSON (no markdown, no explanation) that matches this schema in
 - preferred_skills: string[]
 - responsibilities: string[]
 - keywords_for_ats: string[]
-- raw_summary: string
 
 Rules:
 - If unknown, use empty string "" for scalar fields and [] for arrays.
 - Do not invent details that are not in the source.
+- The source text may still contain leftover site chrome (e.g. "Join or sign in", cookie/privacy notices, "Report this job"). Ignore these — they are not part of the job posting.
 - Output JSON only.

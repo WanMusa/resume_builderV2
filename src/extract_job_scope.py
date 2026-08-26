@@ -1,6 +1,5 @@
 import argparse
 import json
-import requests
 
 from src.db import get_job, update_job
 from src.llm_backend import get_backend
@@ -16,13 +15,6 @@ def load_json(path: str):
         return json.load(f)
 
 
-def fetch_job_page(link: str) -> str:
-    # Basic fetch; some sites may block and become failed jobs (by design).
-    resp = requests.get(link, timeout=25, headers={"User-Agent": "Mozilla/5.0"})
-    resp.raise_for_status()
-    return resp.text[:120000]  # keep prompt bounded
-
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--job-id", required=True)
@@ -33,17 +25,20 @@ def main():
     if not job:
         raise RuntimeError(f"Job not found: {job_id}")
 
+    cleaned_text = job.get("cleaned_text")
+    if not cleaned_text:
+        raise RuntimeError(f"No cleaned_text found for job {job_id} — run scrape_job_page first")
+
     link = job["link"]
 
     try:
-        page_html = fetch_job_page(link)
         prompt_tmpl = load_text("prompts/prompt1_extract_job_scope.txt")
         schema = load_json("schemas/job_scope.schema.json")
 
         prompt = (
             prompt_tmpl
             .replace("{job_link}", link)
-            .replace("{page_content}", page_html)
+            .replace("{page_content}", cleaned_text)
         )
 
         backend = get_backend("extract")

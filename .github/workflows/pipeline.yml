@@ -53,8 +53,22 @@ jobs:
           IDS_JSON=$(echo "$IDS_OUTPUT" | grep '^ids_json=' | cut -d= -f2-)
           echo "pending jobs: $IDS_JSON"
 
-          # Step 3: extract job scope for each pending job
+          # Step 3: scrape + clean each pending job's page
           echo "$IDS_JSON" | python -c "
+          import json, sys, subprocess
+          ids = json.loads(sys.stdin.read())
+          for job_id in ids:
+              print(f'Scraping job page for {job_id}')
+              subprocess.run(['python', '-m', 'src.scrape_job_page', '--job-id', job_id], check=False)
+          "
+
+          # Step 4: get scraped job ids
+          SCRAPED_OUTPUT=$(python -m src.query_by_status --run-id "$RUN_ID" --status scraped)
+          SCRAPED_JSON=$(echo "$SCRAPED_OUTPUT" | grep '^ids_json=' | cut -d= -f2-)
+          echo "scraped jobs: $SCRAPED_JSON"
+
+          # Step 5: extract job scope for each scraped job
+          echo "$SCRAPED_JSON" | python -c "
           import json, sys, subprocess
           ids = json.loads(sys.stdin.read())
           for job_id in ids:
@@ -62,7 +76,7 @@ jobs:
               subprocess.run(['python', '-m', 'src.extract_job_scope', '--job-id', job_id], check=False)
           "
 
-          # Step 4: get all extracted job ids for stage2
+          # Step 6: get all extracted job ids for stage2
           EXTRACTED_OUTPUT=$(python -m src.query_by_status --run-id "$RUN_ID" --status extracted)
           EXTRACTED_JSON=$(echo "$EXTRACTED_OUTPUT" | grep '^ids_json=' | cut -d= -f2-)
           echo "job_ids=$EXTRACTED_JSON" >> "$GITHUB_OUTPUT"

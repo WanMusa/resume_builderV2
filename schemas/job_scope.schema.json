@@ -22,8 +22,7 @@
     "keywords_for_ats": {
       "type": "array",
       "items": { "type": "string" }
-    },
-    "raw_summary": { "type": "string" }
+    }
   },
   "required": [
     "title",
@@ -32,7 +31,6 @@
     "required_skills",
     "preferred_skills",
     "responsibilities",
-    "keywords_for_ats",
-    "raw_summary"
+    "keywords_for_ats"
   ]
 }

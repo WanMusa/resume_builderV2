@@ -2,3 +2,5 @@ supabase
 requests
 jsonschema
 python-docx
+beautifulsoup4
+lxml

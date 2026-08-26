@@ -76,7 +76,6 @@ def main():
                     "job_scope": {
                         "title": "Smoke Test Title",
                         "company": "Smoke Test Company",
-                        "raw_summary": "DB connectivity test",
                     },
                     "updated_at": datetime.now(timezone.utc).isoformat(),
                 }
