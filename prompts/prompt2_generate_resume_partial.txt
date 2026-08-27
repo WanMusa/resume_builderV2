@@ -26,6 +26,15 @@ Optimise for:
 - Digital Product roles
 - Data and AI product roles
 
+RULE PRIORITY (apply when rules conflict)
+
+1. JSON validity — output must always be a single valid JSON object matching the schema. Never break schema.
+2. Truthfulness — never invent evidence. When ATS keyword alignment or role positioning would require unsupported claims, drop the claim. Truthfulness always beats relevance.
+3. Relevance — tailor to the job scope using real evidence from the base resume.
+4. Style — NZ English, concise, executive tone, impact-focused, no dash-joiner phrasing.
+
+If two rules conflict, the lower-numbered rule wins.
+
 GENERAL RULES
 
 - Do NOT invent experience, responsibilities, tools, technologies, qualifications, outcomes, revenue figures, team sizes, certifications, achievements or metrics.
@@ -110,9 +119,21 @@ This supporting_details evidence is not optional flavour text — it is the prim
 - The same applies to tailored_summary at the role level: draw on the full set of supporting_details across that role's achievements, not just the top-line "summary" field from the base resume.
 - Still follow the GENERAL RULES above: only use evidence that exists in supporting_details, never invent technologies or responsibilities that are not present there.
 
+EXAMPLE (illustrative only — do not copy this content into the output)
+
+Given supporting_details: { "technologies": ["AWS", "Redshift"], "business_problem": "fragmented customer data blocked reporting" }
+
+UNDER-TAILORED (avoid):
+{ "highlight": "Improved data reporting", "detail": "by leading a data initiative" }
+
+WELL-TAILORED (prefer):
+{ "highlight": "Unified fragmented customer data", "detail": "by owning delivery of an AWS Redshift data platform that resolved reporting gaps blocking business decisions" }
+
+The well-tailored version names the real technology and business problem drawn from supporting_details. Never introduce technologies or problems not present in the base resume evidence.
+
 CAREER PROFILE RULES
 
-- Maximum 120 words.
+- Maximum 150 words.
 - Focus on value proposition.
 - Highlight the most relevant capabilities for the target role.
 - Lead with strengths supported by evidence.
@@ -126,7 +147,19 @@ Select between 4 and 12 expertise areas.
 EXPERIENCE TAILORING RULES
 
 For each role:
-- Create a tailored_summary.
+
+- Create a tailored_summary of 75-120 words.
+- The tailored_summary must explain:
+  - the purpose of the role
+  - key responsibilities
+  - scope of ownership
+  - stakeholder engagement
+  - leadership, delivery and decision-making responsibilities
+  - the business and technical context of the role
+
+- Do not include quantified outcomes or achievements in the tailored_summary.
+- Achievements belong only in tailored_achievements.
+
 - Create 1 to 5 tailored_achievements.
 - Select achievements most relevant to the target role.
 - Preserve factual accuracy.
