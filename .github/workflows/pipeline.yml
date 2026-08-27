@@ -1,0 +1,52 @@
+on:
+  push:
+    paths:
+      - "incoming/**/*.csv"
+
+permissions:
+  contents: read
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    outputs:
+      run_id: ${{ steps.out.outputs.run_id }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Parse CSV and scrape pending jobs
+        id: out
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: |
+          RUN_OUTPUT=$(python -m src.parse_csv)
+          echo "$RUN_OUTPUT"
+          RUN_ID=$(echo "$RUN_OUTPUT" | grep '^run_id=' | cut -d= -f2)
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+
+          IDS_OUTPUT=$(python -m src.query_by_status --run-id "$RUN_ID" --status pending)
+          IDS_JSON=$(echo "$IDS_OUTPUT" | grep '^ids_json=' | cut -d= -f2-)
+          echo "pending jobs: $IDS_JSON"
+
+          echo "$IDS_JSON" | python -c "
+          import json, sys, subprocess
+          ids = json.loads(sys.stdin.read())
+          for job_id in ids:
+              print(f'Scraping job page for {job_id}')
+              subprocess.run(['python', '-m', 'src.scrape_job_page', '--job-id', job_id], check=False)
+          "
+
+  continue_pipeline:
+    needs: scrape
+    uses: ./.github/workflows/stage1_extract_job_scope.yml
+    with:
+      run_id: ${{ needs.scrape.outputs.run_id }}
+    secrets: inherit
