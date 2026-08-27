@@ -278,6 +278,17 @@ class GroqBackend:
         print(f"RAW CONTENT LENGTH: {len(raw)}")
         print(f"RAW CONTENT: {repr(raw)}")
 
+        raw = body["choices"][0]["message"]["content"]
+
+        raw = re.sub(
+            r"(?s)<think>.*?</think>",
+            "",
+            raw
+        ).strip()
+
+        print("AFTER THINK REMOVAL:")
+        print(raw[:1000])
+
         data = json.loads(_strip_code_fences(raw))
 
         data = _drop_unexpected_top_level_keys(data, json_schema)
