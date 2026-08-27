@@ -1,3 +1,4 @@
+from curses import raw
 from datetime import time
 import json
 import logging
@@ -206,7 +207,7 @@ class GroqBackend:
             raise
 
     def complete(self, prompt: str, json_schema: Dict[str, Any]) -> Dict[str, Any]:
-        logging.info("******** ENTERED GROQ COMPLETE ********")
+        print("******** ENTERED GROQ COMPLETE ********")
         base_payload: Dict[str, Any] = {
             "model": self.model,
             "messages": [
@@ -260,12 +261,12 @@ class GroqBackend:
                 raise e
         else:
             try:
-                logging.info("Calling model...")
+                print("Calling model...")
                 body = self._post(base_payload)
-                logging.info("Model call completed")
-                logging.info("===== RESPONSE BODY =====")
-                logging.info(repr(body))
-                logging.info("=========================")
+                print("Model call completed")
+                print("===== RESPONSE BODY =====")
+                print(repr(body))
+                print("=========================")
 
             except (urllib.error.HTTPError, TypeError) as e:
                 logging.error(f"An API error occurred: {e}")
@@ -274,9 +275,8 @@ class GroqBackend:
 
         raw = body["choices"][0]["message"]["content"]
 
-        logging.info("===== RAW MODEL OUTPUT =====")
-        logging.info(raw)
-        logging.info("============================")
+        print(f"RAW CONTENT LENGTH: {len(raw)}")
+        print(f"RAW CONTENT: {repr(raw)}")
 
         data = json.loads(_strip_code_fences(raw))
 
