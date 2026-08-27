@@ -41,7 +41,11 @@ def main():
             .replace("{page_content}", cleaned_text)
         )
 
+        print(f"[extract_job_scope] Loading backend for job_id={job_id}")
+        
         backend = get_backend("extract")
+        print(f"[extract_job_scope] Backend resolved: {type(backend).__name__}")
+        
         job_scope = backend.complete(prompt=prompt, json_schema=schema)
 
         update_job(job_id, status="extracted", job_scope=job_scope, error_message=None)
