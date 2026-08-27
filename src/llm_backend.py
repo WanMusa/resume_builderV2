@@ -259,7 +259,13 @@ class GroqBackend:
                 raise e
         else:
             try:
+                logging.info("Calling model...")
                 body = self._post(base_payload)
+                logging.info("Model call completed")
+                logging.info("===== RESPONSE BODY =====")
+                logging.info(repr(body))
+                logging.info("=========================")
+                
             except (urllib.error.HTTPError, TypeError) as e:
                 logging.error(f"An API error occurred: {e}")
                 logging.error(f"Request payload: {base_payload}")
