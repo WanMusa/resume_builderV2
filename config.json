@@ -21,21 +21,21 @@
     "groq": { 
       "api_key_env": "GROQ_API_KEY",
       "base_url": "https://api.groq.com/openai/v1",
-      "json_mode": false
+      "json_mode": true
     }
   },
   "stages": {
     "extract": {
       "provider": "groq",
-      "model": "groq/compound"
+      "model": "openai/gpt-oss-120b"
     },
     "generate_resume": {
       "provider": "groq",
-      "model": "groq/compound"
+      "model": "openai/gpt-oss-120b"
     },
     "generate_cover_letter": {
       "provider": "groq",
-      "model": "groq/compound"
+      "model": "openai/gpt-oss-120b"
     }
   }
 }

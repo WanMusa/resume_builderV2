@@ -228,7 +228,7 @@ class GroqBackend:
                 "type": "json_schema",
                 "json_schema": {
                     "name": self._schema_name(json_schema),
-                    "strict": False,
+                    "strict": True,
                     "schema": json_schema,
                 },
             }
