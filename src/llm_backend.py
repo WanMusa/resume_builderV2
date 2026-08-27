@@ -206,6 +206,7 @@ class GroqBackend:
             raise
 
     def complete(self, prompt: str, json_schema: Dict[str, Any]) -> Dict[str, Any]:
+        logging.info("******** ENTERED GROQ COMPLETE ********")
         base_payload: Dict[str, Any] = {
             "model": self.model,
             "messages": [
@@ -265,7 +266,7 @@ class GroqBackend:
                 logging.info("===== RESPONSE BODY =====")
                 logging.info(repr(body))
                 logging.info("=========================")
-                
+
             except (urllib.error.HTTPError, TypeError) as e:
                 logging.error(f"An API error occurred: {e}")
                 logging.error(f"Request payload: {base_payload}")
