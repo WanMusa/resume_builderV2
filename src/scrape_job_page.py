@@ -70,10 +70,21 @@ LINE_BLOCKLIST_BY_DOMAIN = {
 
 
 def fetch_job_page(link: str) -> str:
-    resp = requests.get(link, timeout=25, headers={"User-Agent": "Mozilla/5.0"})
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+        ),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-NZ,en;q=0.9",
+        "Referer": "https://www.google.com/",
+    }
+
+    resp = requests.get(link, timeout=25, headers=headers)
+    if resp.status_code == 403:
+        print(f"403 body preview: {resp.text[:500]}")
     resp.raise_for_status()
     return resp.text
-
 
 def clean_html_for_llm(raw_html: str) -> str:
     """
