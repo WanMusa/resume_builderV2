@@ -1,0 +1,41 @@
+on:
+  push:
+    paths:
+      - "manual_scrapes/**/*.csv"
+      # or *.csv, depending on what your extension exports
+
+permissions:
+  contents: read
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    outputs:
+      run_id: ${{ steps.out.outputs.run_id }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Ingest manually scraped jobs
+        id: out
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: |
+          RUN_OUTPUT=$(python -m src.ingest_manual_scrape)
+          echo "$RUN_OUTPUT"
+          RUN_ID=$(echo "$RUN_OUTPUT" | grep '^run_id=' | cut -d= -f2)
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+
+  continue_pipeline:
+    needs: ingest
+    uses: ./.github/workflows/stage1_extract_job_scope.yml
+    with:
+      run_id: ${{ needs.ingest.outputs.run_id }}
+    secrets: inherit

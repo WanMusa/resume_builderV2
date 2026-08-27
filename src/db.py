@@ -48,24 +48,26 @@ def finish_run(run_id: str, status: str) -> None:
     )
 
 
-def insert_job(run_id: str, link: str) -> str:
+def insert_job(
+    run_id: str,
+    link: str,
+    status: str = "pending",
+    cleaned_text: Optional[str] = None,
+) -> str:
     sb = get_client()
-    resp = (
-        sb.table("jobs")
-        .insert(
-            {
-                "run_id": run_id,
-                "link": link,
-                "status": "pending",
-            }
-        )
-        .execute()
-    )
+    payload: Dict[str, Any] = {
+        "run_id": run_id,
+        "link": link,
+        "status": status,
+    }
+    if cleaned_text is not None:
+        payload["cleaned_text"] = cleaned_text
+
+    resp = sb.table("jobs").insert(payload).execute()
     rows = resp.data or []
     if not rows:
         raise RuntimeError(f"Failed to insert job for link: {link}")
     return rows[0]["id"]
-
 
 def update_job(job_id: str, **fields: Any) -> None:
     sb = get_client()
