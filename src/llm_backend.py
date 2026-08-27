@@ -266,7 +266,13 @@ class GroqBackend:
                 raise e
 
         raw = body["choices"][0]["message"]["content"]
+
+        logging.info("===== RAW MODEL OUTPUT =====")
+        logging.info(raw)
+        logging.info("============================")
+
         data = json.loads(_strip_code_fences(raw))
+
         data = _drop_unexpected_top_level_keys(data, json_schema)
         validate(instance=data, schema=json_schema)
         return data
