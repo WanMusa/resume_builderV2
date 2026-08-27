@@ -27,15 +27,15 @@
   "stages": {
     "extract": {
       "provider": "groq",
-      "model": "qwen/qwen3.6-27b"
+      "model": "groq/compound"
     },
     "generate_resume": {
       "provider": "groq",
-      "model": "qwen/qwen3.6-27b"
+      "model": "groq/compound"
     },
     "generate_cover_letter": {
       "provider": "groq",
-      "model": "qwen/qwen3.6-27b"
+      "model": "groq/compound"
     }
   }
 }
