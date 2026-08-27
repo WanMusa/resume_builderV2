@@ -33,8 +33,7 @@
       { "title": "Product Strategy & Roadmap Ownership", "description": "Defining product vision, prioritising initiatives, balancing short and long-term objectives, and aligning delivery with business goals, customer needs and measurable outcomes." },
       { "title": "AI-Powered Solutions & Automation", "description": "Applying AI, machine learning and automation technologies to streamline processes, improve decision-making and deliver enhanced customer and operational outcomes." },
       { "title": "Agile Delivery & MVP Development", "description": "Leading Agile product delivery, backlog management, sprint planning and MVP execution, using iterative development to rapidly validate ideas and create business value." },
-      { "title": "Customer Discovery & User Research", "description": "Conducting customer interviews, journey mapping, usability testing and discovery activities to uncover unmet needs, validate opportunities and inform product strategy." },
-      { "title": "Customer Discovery, Market Research & Validation", "description": "Conducting customer interviews, market analysis, competitor research and product discovery activities to identify opportunities, validate assumptions and inform product strategy." },
+      { "title": "Customer Discovery, Research & Validation", "description": "Conducting customer interviews, journey mapping, usability testing, market and competitor analysis to uncover unmet needs, validate opportunities and inform product strategy." },
       { "title": "Experimentation, Feature Testing & Rapid Prototyping", "description": "Designing and executing product experiments including false-door tests, prototypes, A/B testing and MVPs to validate demand, reduce risk and guide investment decisions." },
       { "title": "Requirements Elicitation & Scope Management", "description": "Facilitating workshops, stakeholder interviews and discovery sessions to capture requirements, align expectations, define scope and translate business needs into actionable delivery outcomes." },
       { "title": "Performance Measurement & Hypothesis-Driven Product Management", "description": "Defining success metrics, KPIs and outcome-based objectives, using hypotheses, experimentation and data analysis to evaluate product performance and inform decision-making." },
@@ -47,7 +46,10 @@
       { "title": "API Design & Systems Integration (REST, SOAP)", "description": "Delivering APIs and system integrations that improve interoperability, streamline business processes and support scalable digital ecosystems." },
       { "title": "Cloud Platforms & Solution Architecture (AWS)", "description": "Working with cloud-native technologies including AWS Lambda, ECS, APIs and event-driven architectures to support scalable, resilient and cost-effective product solutions." },
       { "title": "Software Delivery, CI/CD & Release Management", "description": "Collaborating with engineering teams to manage release pipelines, deployment processes, quality assurance and continuous delivery practices that enable reliable product delivery." },
-      { "title": "Stakeholder Engagement & Cross-Functional Leadership", "description": "Building alignment across customers, executives, delivery teams and technical specialists, fostering collaboration to achieve strategic and operational objectives." }
+      { "title": "Stakeholder Engagement & Cross-Functional Leadership", "description": "Building alignment across customers, executives, delivery teams and technical specialists, fostering collaboration to achieve strategic and operational objectives." },
+      { "title": "Agricultural Data & Supply Chain Traceability", "description": "Delivering big-data ingestion and standardisation of farm data into ICAR-compliant schemas, enabling interoperability and traceability across the agricultural supply chain." },
+      { "title": "Retail POS, Loyalty & Customer Engagement Platforms", "description": "Owning delivery across multi-module POS ecosystems integrating loyalty, rules-based pricing, fuel sales and marketing with SAP and third-party platforms." },
+      { "title": "Order Management & Complex Fulfilment (Industrial)", "description": "Delivering order management and CRM capability for steel and metals, handling weight/length-based sales, extrusion and processing requirements, and heavy-load logistics." }
     ],
     "professional_experience": [
       {
@@ -77,6 +79,7 @@
           {
             "achievement": "Reduced farm planning effort by 30% through ownership of the product roadmap and delivery of predictive analytics capabilities within a SaaS herd management platform.",
             "supporting_details": {
+              "team_size": "4 (including 3 senior engineers)",
               "responsibilities": ["Roadmap ownership", "Stakeholder engagement", "Requirements prioritisation", "Delivery leadership"],
               "capabilities": ["Predictive analytics", "Farm planning optimisation", "Decision support tools"]
             }
@@ -130,9 +133,10 @@
             "supporting_details": {
               "product": "Anvil OMS",
               "delivery_type": "MVP",
-              "responsibilities": ["Owned requirements definition", "Prioritised backlog", "Facilitated stakeholder workshops", "Defined acceptance criteria", "Partnered with engineering throughout delivery"],
-              "business_problem": "Customers and internal teams required greater flexibility when fulfilling orders across multiple warehouse locations.",
-              "outcomes": ["8% revenue increase", "Improved fulfilment efficiency", "Enhanced customer responsiveness"]
+              "responsibilities": ["Owned requirements definition", "Prioritised backlog", "Facilitated stakeholder workshops", "Defined acceptance criteria", "Partnered with engineering throughout delivery", "Designed and ran A/B tests across NZ and AUS teams"],
+              "experimentation": "Ran A/B tests on transport-cost pricing strategies across NZ and AUS markets, comparing evenly distributed freight recovery against selective percentage-based allocation to keep competitive items price-attractive while recovering margin on premium items.",
+              "business_problem": "Customers and internal teams required greater flexibility when fulfilling orders across multiple warehouse locations, and freight cost recovery needed to preserve price competitiveness.",
+              "outcomes": ["8% revenue increase", "Improved fulfilment efficiency", "Enhanced customer responsiveness", "Data-informed pricing strategy"]
             }
           },
           {
@@ -186,6 +190,7 @@
           {
             "achievement": "Delivered complex SaaS integrations across POS, SAP and loyalty ecosystems for major retail clients including Z Energy, Caltex and Daiso, improving customer targeting, campaign effectiveness and operational efficiency.",
             "supporting_details": {
+              "team_size": "6–8",
               "responsibilities": ["Owned requirements discovery", "Facilitated stakeholder workshops", "Defined solution requirements", "Managed backlog prioritisation", "Coordinated delivery across development teams"],
               "integration_types": ["POS systems", "SAP", "Loyalty platforms", "Third-party applications"],
               "outcomes": ["Improved marketing effectiveness", "Enhanced customer targeting", "Increased platform adoption"]
@@ -238,16 +243,46 @@
         ]
       },
       {
-        "title": "Business Analyst",
+        "title": "Business Analyst / Scrum Master",
         "company": "Fusionex Ltd",
         "location": "APAC",
         "period": "Jun 2017 – Oct 2019",
-        "platform_description": "Alibaba fulfillment centre in Kuala Lumpur managing high-volume order processing, warehouse operations and logistics for e-commerce customers.",
-        "summary": "Improved team velocity and delivery lead times by serving as Scrum Master for IoT and software development teams. Gathered and translated business requirements into user stories and functional specifications, ensuring successful solution delivery. Facilitated backlog refinement, sprint planning and stakeholder engagement to align product outcomes with business objectives.",
+        "platform_description": "Digital government and logistics solutions, including licensing automation for the Digital Free Trade Zone (DFTZ) at KLIA and the Royal Malaysian Customs Department, and IoT/software delivery for high-volume e-commerce fulfilment operations.",
+        "summary": "Served as Business Analyst and Scrum Master for IoT and software development teams delivering SaaS solutions for public sector and e-commerce clients. Gathered and translated business requirements into user stories and functional specifications, facilitated backlog refinement and sprint planning, and engaged closely with client testing and project management teams to align delivery with business objectives and accelerate release cycles.",
         "achievements": [
-          "Reduced licensing approval times by 25%; delivered SaaS solutions that automated workflows for public sector clients."
+          {
+            "achievement": "Reduced licensing approval times by 25% by delivering SaaS solutions that automated manual workflows for the Digital Free Trade Zone (DFTZ) at KLIA and the Royal Malaysian Customs Department.",
+            "supporting_details": {
+              "clients": ["Digital Free Trade Zone (DFTZ), KLIA", "Royal Malaysian Customs Department"],
+              "delivery_type": "SaaS",
+              "responsibilities": ["Requirements gathering", "User story development", "Stakeholder engagement", "Backlog refinement", "Sprint planning"],
+              "outcomes": ["25% faster licensing approval times", "Automated manual approval workflows"]
+            }
+          },
+          {
+            "achievement": "Cut testing, iteration and deployment time by 50% by embedding with client testing and project management teams to streamline delivery cycles for IoT and software development teams.",
+            "supporting_details": {
+              "responsibilities": ["Scrum Master facilitation", "Backlog refinement", "Sprint planning", "Regular integration with client test and PMO teams", "Impediment removal"],
+              "outcomes": ["50% reduction in test, iteration and deployment time", "Improved delivery cadence"]
+            }
+          }
         ]
+      }
+    ],
+    "selected_projects": [
+      {
+        "name": "Web Data Ingestion & Document Automation Pipeline",
+        "role": "Sole designer and developer",
+        "description": "Built an end-to-end, provider-agnostic AI pipeline that ingests web data at scale, transforms it through structured LLM processing and generates formatted documents automatically.",
+        "highlights": [
+          "Orchestrated a multi-stage LLM workflow spanning web scraping, structured data extraction and content generation, with schema-validated JSON at each stage.",
+          "Designed a config-driven provider abstraction so LLM vendor and model can be swapped without code changes, avoiding vendor lock-in.",
+          "Automated the pipeline with GitHub Actions triggered by input files, persisting data and generated documents in Supabase (Postgres and object storage).",
+          "Engineered JSON-schema-constrained LLM outputs feeding a Python document generator that produces formatted DOCX files."
+        ],
+        "technologies": ["Python", "LLM APIs", "GitHub Actions", "BeautifulSoup", "Supabase (PostgreSQL)", "JSON Schema", "CI/CD"]
       }
     ]
   }
 }
+
