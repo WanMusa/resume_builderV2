@@ -67,9 +67,18 @@ def read_links(csv_path: str) -> list[str]:
 def scrape_link(link: str) -> dict | None:
     try:
         raw_html = fetch_job_page(link)
+
+        company = None
+        if "seek.com" in urlparse(link).netloc.lower():
+            company = extract_seek_company(raw_html)
+            print(f"DEBUG extracted company: {company!r}")   # ← temporary debug line
+
         cleaned_text = clean_html_for_llm(raw_html)
         cleaned_text = strip_repeating_chrome(cleaned_text, link)
         cleaned_text = trim_trailing_boilerplate(cleaned_text, link)
+
+        if company:
+            cleaned_text = f"Company: {company}\n\n{cleaned_text}"
 
         if not cleaned_text.strip():
             print(f"WARNING: empty cleaned text for {link}, skipping")
