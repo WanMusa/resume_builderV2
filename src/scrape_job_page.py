@@ -157,6 +157,15 @@ def trim_trailing_boilerplate(text: str, link: str) -> str:
 
     return text.strip()
 
+def extract_seek_company(raw_html: str) -> str | None:
+    """
+    Seek's advertiser (company) name lives in a data-automation span
+    that can get cut off by trim_trailing_boilerplate depending on DOM
+    order. Pull it directly by its stable automation hook instead.
+    """
+    soup = BeautifulSoup(raw_html, "lxml")
+    el = soup.find(attrs={"data-automation": "advertiser-name"})
+    return el.get_text(strip=True) if el else None
 
 def main():
     parser = argparse.ArgumentParser()
@@ -172,9 +181,17 @@ def main():
 
     try:
         raw_html = fetch_job_page(link)
+
+        company = None
+        if "seek.com" in urlparse(link).netloc.lower():
+            company = extract_seek_company(raw_html)
+
         cleaned_text = clean_html_for_llm(raw_html)
         cleaned_text = strip_repeating_chrome(cleaned_text, link)
         cleaned_text = trim_trailing_boilerplate(cleaned_text, link)
+
+        if company:
+            cleaned_text = f"Company: {company}\n\n{cleaned_text}"
 
         if not cleaned_text.strip():
             raise RuntimeError("Cleaned text was empty after scraping")
