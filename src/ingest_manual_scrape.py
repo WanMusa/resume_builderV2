@@ -15,10 +15,10 @@ from src.db import create_run, insert_job
 REQUIRED_FIELDS = ["link", "cleaned_text"]
 
 
-def find_latest_export(manual_dir: str = "manual_scrapes") -> str:
+def find_latest_export(manual_dir: str = "incoming_manual") -> str:
     paths = glob.glob(os.path.join(manual_dir, "*.json"))
     if not paths:
-        raise RuntimeError("No export files found in manual_scrapes/")
+        raise RuntimeError("No export files found in incoming_manual/")
     paths.sort(key=os.path.getmtime, reverse=True)
     return paths[0]
 
@@ -43,7 +43,7 @@ def main():
     parser.add_argument("--file", default=None, help="Optional explicit export file path")
     args = parser.parse_args()
 
-    export_path = args.file or find_latest_export("manual_scrapes")
+    export_path = args.file or find_latest_export("incoming_manual")
     jobs = parse_export(export_path)
 
     run_id = create_run(total_links=len(jobs), source_csv=export_path)
