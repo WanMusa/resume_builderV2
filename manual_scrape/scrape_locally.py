@@ -22,8 +22,14 @@ import argparse
 import csv
 import json
 import os
+import sys
+from pathlib import Path
 from datetime import datetime, timezone
 from urllib.parse import urlparse
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 """
 I am reusing the same cleaning logic as src.scrape_job_page.py, so we just update that file and import the functions here. 
