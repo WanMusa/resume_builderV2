@@ -23,6 +23,7 @@ import csv
 import json
 import os
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 
 """
 I am reusing the same cleaning logic as src.scrape_job_page.py, so we just update that file and import the functions here. 
@@ -71,7 +72,6 @@ def scrape_link(link: str) -> dict | None:
         company = None
         if "seek.com" in urlparse(link).netloc.lower():
             company = extract_seek_company(raw_html)
-            print(f"DEBUG extracted company: {company!r}")   # ← temporary debug line
 
         cleaned_text = clean_html_for_llm(raw_html)
         cleaned_text = strip_repeating_chrome(cleaned_text, link)
