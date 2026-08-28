@@ -16,10 +16,40 @@ permissions:
   copilot-requests: write
 
 jobs:
-  extract:
+  get_scraped_ids:
     runs-on: ubuntu-latest
     outputs:
       job_ids: ${{ steps.out.outputs.job_ids }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Get scraped job ids
+        id: out
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: |
+          RUN_ID="${{ inputs.run_id }}"
+          SCRAPED_OUTPUT=$(python -m src.query_by_status --run-id "$RUN_ID" --status scraped)
+          SCRAPED_JSON=$(echo "$SCRAPED_OUTPUT" | grep '^ids_json=' | cut -d= -f2-)
+          echo "scraped jobs: $SCRAPED_JSON"
+          echo "job_ids=$SCRAPED_JSON" >> "$GITHUB_OUTPUT"
+
+  extract:
+    needs: get_scraped_ids
+    if: ${{ needs.get_scraped_ids.outputs.job_ids != '[]' && needs.get_scraped_ids.outputs.job_ids != '' }}
+    strategy:
+      matrix:
+        job_id: ${{ fromJson(needs.get_scraped_ids.outputs.job_ids) }}
+      max-parallel: 2
+      fail-fast: false
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v5
@@ -36,8 +66,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Extract job scope for scraped jobs
-        id: out
+      - name: Extract job scope
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
@@ -48,31 +77,41 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: |
+          python -m src.extract_job_scope --job-id "${{ matrix.job_id }}"
+
+  get_extracted_ids:
+    needs: [get_scraped_ids, extract]
+    if: ${{ needs.get_scraped_ids.outputs.job_ids != '[]' && needs.get_scraped_ids.outputs.job_ids != '' }}
+    runs-on: ubuntu-latest
+    outputs:
+      job_ids: ${{ steps.out.outputs.job_ids }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Get extracted job ids
+        id: out
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: |
           RUN_ID="${{ inputs.run_id }}"
-
-          SCRAPED_OUTPUT=$(python -m src.query_by_status --run-id "$RUN_ID" --status scraped)
-          SCRAPED_JSON=$(echo "$SCRAPED_OUTPUT" | grep '^ids_json=' | cut -d= -f2-)
-          echo "scraped jobs: $SCRAPED_JSON"
-
-          echo "$SCRAPED_JSON" | python -c "
-          import json, sys, subprocess
-          ids = json.loads(sys.stdin.read())
-          for job_id in ids:
-              print(f'Extracting job scope for {job_id}')
-              subprocess.run(['python', '-m', 'src.extract_job_scope', '--job-id', job_id], check=False)
-          "
-
           EXTRACTED_OUTPUT=$(python -m src.query_by_status --run-id "$RUN_ID" --status extracted)
           EXTRACTED_JSON=$(echo "$EXTRACTED_OUTPUT" | grep '^ids_json=' | cut -d= -f2-)
+          echo "extracted jobs: $EXTRACTED_JSON"
           echo "job_ids=$EXTRACTED_JSON" >> "$GITHUB_OUTPUT"
-          echo "Extracted job_ids=$EXTRACTED_JSON"
 
   stage2:
-    needs: extract
-    if: ${{ needs.extract.outputs.job_ids != '[]' && needs.extract.outputs.job_ids != '' }}
+    needs: get_extracted_ids
+    if: ${{ needs.get_extracted_ids.outputs.job_ids != '[]' && needs.get_extracted_ids.outputs.job_ids != '' }}
     strategy:
       matrix:
-        job_id: ${{ fromJson(needs.extract.outputs.job_ids) }}
+        job_id: ${{ fromJson(needs.get_extracted_ids.outputs.job_ids) }}
       fail-fast: false
     uses: ./.github/workflows/stage2_resume_partial.yml
     with:
@@ -81,11 +120,11 @@ jobs:
     secrets: inherit
 
   stage3:
-    needs: [extract, stage2]
-    if: ${{ needs.extract.outputs.job_ids != '[]' && needs.extract.outputs.job_ids != '' }}
+    needs: [get_extracted_ids, stage2]
+    if: ${{ needs.get_extracted_ids.outputs.job_ids != '[]' && needs.get_extracted_ids.outputs.job_ids != '' }}
     strategy:
       matrix:
-        job_id: ${{ fromJson(needs.extract.outputs.job_ids) }}
+        job_id: ${{ fromJson(needs.get_extracted_ids.outputs.job_ids) }}
       fail-fast: false
     uses: ./.github/workflows/stage3_cover_letter.yml
     with:
@@ -93,11 +132,11 @@ jobs:
     secrets: inherit
 
   stage4:
-    needs: [extract, stage3]
-    if: ${{ needs.extract.outputs.job_ids != '[]' && needs.extract.outputs.job_ids != '' }}
+    needs: [get_extracted_ids, stage3]
+    if: ${{ needs.get_extracted_ids.outputs.job_ids != '[]' && needs.get_extracted_ids.outputs.job_ids != '' }}
     strategy:
       matrix:
-        job_id: ${{ fromJson(needs.extract.outputs.job_ids) }}
+        job_id: ${{ fromJson(needs.get_extracted_ids.outputs.job_ids) }}
       fail-fast: false
     uses: ./.github/workflows/stage4_render_upload.yml
     with:
