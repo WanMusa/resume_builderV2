@@ -44,7 +44,7 @@ from src.scrape_job_page import (
 )
 
 LINKS_CSV = "manual_scrape/links.csv"
-EXPORTS_DIR = "incoming_manual/exports"
+EXPORTS_DIR = "incoming_manual/"
 TEST_DIR = "manual_scrape/test_runs"
 
 
