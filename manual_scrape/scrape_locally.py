@@ -33,6 +33,7 @@ from src.scrape_job_page import (
     clean_html_for_llm,
     strip_repeating_chrome,
     trim_trailing_boilerplate,
+    extract_seek_company,
 )
 
 LINKS_CSV = "manual_scrape/links.csv"

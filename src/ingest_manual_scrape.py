@@ -1,3 +1,9 @@
+"""
+This script ingests a manual scrape export file (JSON) and inserts the jobs into the database.
+The JSON file needs to be produced by the manual scrape process, which is a separate script that scrapes job postings from a list of links.
+The manual script is in manual_scrape/scrape_locally.py, and the export file is produced by running that script with the --export flag.
+"""
+
 import argparse
 import glob
 import json
