@@ -1,248 +1,202 @@
 # Resume Builder V2
 
-Automated job-application document generator. Drop a CSV of job links — get tailored resumes and cover letters uploaded to cloud storage, ready to send.
+Resume Builder V2 turns job links into tailored application documents.
 
-**Pipeline status: All 4 stages complete and running end-to-end.**
+Given one or more job URLs, it:
+- scrapes and cleans the job posting text,
+- extracts structured job scope with an LLM,
+- generates a tailored resume section,
+- generates a tailored cover letter,
+- renders both to `.docx`, and
+- uploads outputs to Supabase Storage with signed download URLs.
 
----
+## Ingestion modes
 
-## How it works
+This repo supports two ways to start the pipeline:
 
-```
-incoming/*.csv  →  Stage 1  →  Stage 2  →  Stage 3  →  Stage 4
-  (job links)     extract     tailored    cover       render +
-                  job scope   resume      letter      upload .docx
-```
+1. **CSV ingestion in GitHub Actions** (default)
+   - Add/push a CSV to `incoming/`.
+   - Workflow: `.github/workflows/pipeline.yml`
 
-1. Add a CSV file with a `job_link` column to `incoming/` and push to `main`.
-2. GitHub Actions triggers automatically — all stages run in parallel per job.
-3. Each job's tailored resume and cover letter are uploaded to Supabase Storage.
-4. Download links (valid 7 days) are stored in the `jobs` table (`resume_url`, `cover_letter_url`).
+2. **Manual scrape on your local machine** (for sites that block cloud runner IPs)
+   - Run `python -m manual_scrape.scrape_locally` locally.
+   - Commit/push the generated JSON in `incoming_manual/`.
+   - Workflow: `.github/workflows/manual_scrape_pipeline.yml`
 
-> No generated files are committed back to the repo. Everything goes to Supabase.
+## End-to-end flow
 
----
+### A) CSV-driven flow
 
-## Pipeline stages
+`incoming/*.csv`  
+→ `src.parse_csv` creates `runs` + `jobs` (`pending`)  
+→ `src.scrape_job_page` fetches + cleans pages (`scraped`)  
+→ `src.extract_job_scope` writes `job_scope` (`extracted`)  
+→ `src.generate_resume_partial` writes `resume_json` (`resume_generated`)  
+→ `src.generate_cover_letter` writes `cover_letter_json` (`cover_letter_generated`)  
+→ `src.render_and_upload` uploads `.docx` and writes URLs (`completed`)
 
-### Stage 1 — Extract job scope (`src/parse_csv.py` + `src/extract_job_scope.py`)
-- Reads CSV, creates a `runs` row and `jobs` rows in Supabase
-- Scrapes each job posting URL and calls the LLM to extract structured job scope JSON
-- Output: `jobs.job_scope`, status → `extracted`
-- Schema: `schemas/job_scope.schema.json`
-- Prompt: `prompts/prompt1_extract_job_scope.txt`
+### B) Manual-local-scrape flow
 
-### Stage 2 — Generate tailored resume (`src/generate_resume_partial.py`)
-- Reads `job_scope` + `assets/base_resume.json` (your full resume)
-- Calls the LLM to generate mutable resume sections tailored to the role:
-  - `target_role_tags`, `career_profile`, `areas_of_expertise`, `professional_experience`
-- Output: `jobs.resume_json`, status → `resume_generated`
-- Schema: `schemas/resume_partial.schema.json`
-- Prompt: `prompts/prompt2_generate_resume_partial.txt`
+`manual_scrape/links.csv`  
+→ run locally: `python -m manual_scrape.scrape_locally`  
+→ output JSON in `incoming_manual/export_<timestamp>.json`  
+→ commit + push JSON file  
+→ `src.ingest_manual_scrape` inserts jobs as `scraped`  
+→ pipeline continues from extraction onward (same Stage 1b → Stage 4 path)
 
-### Stage 3 — Generate cover letter (`src/generate_cover_letter.py`)
-- Reads `job_scope` + `resume_json`
-- Calls the LLM to write a tailored 1-page cover letter following Harvard Career Services guidelines
-- Detects whether the posting is from a recruiter or direct employer and adjusts tone
-- Output: `jobs.cover_letter_json`, status → `cover_letter_generated`
-- Schema: `schemas/cover_letter.schema.json`
-- Prompt: `prompts/prompt3_generate_cover_letter.txt`
+## Manual scrape (local) instructions
 
-### Stage 4 — Render and upload (`src/render_and_upload.py`)
-- Renders `resume_json` + `cover_letter_json` into `.docx` files using python-docx
-- Uploads to Supabase Storage bucket `generated-documents`
-- Files are named: `{Name}-{Position}-{Organisation}-Resume.docx` / `Cover Letter.docx`
-- All jobs from the same CSV batch share a timestamped folder (`YYYY-MM-DD_HH-MM/`)
-- Output: `jobs.resume_url`, `jobs.cover_letter_url`, status → `completed`
+Use this when a target site blocks GitHub Actions IP ranges.
 
----
+1. Put URLs into `manual_scrape/links.csv` (header can be `job_link`, `link`, `url`, or `job_url`).
+2. Run locally from repo root:
+   - `python -m manual_scrape.scrape_locally`
+3. Confirm it writes `incoming_manual/export_YYYYMMDDTHHMMSSZ.json`.
+4. Commit and push that JSON file.
+5. GitHub Actions auto-runs `manual_scrape_pipeline.yml` and continues full generation.
 
-## Triggering the pipeline
+Safe dry-run mode (no pipeline trigger):
+- `python -m manual_scrape.scrape_locally --test`
+- Writes to `manual_scrape/test_runs/` (not watched by workflows).
 
-**Automatic:** Push a CSV file into `incoming/` — the pipeline starts immediately.
+## Required configuration
 
-**Manual (single job):** Each stage has a `workflow_dispatch` trigger. Go to Actions → select the stage → Run workflow → enter a `job_id` UUID.
-
-```
-Actions available:
-  pipeline.yml               ← full pipeline (triggered by CSV push)
-  stage2_resume_partial.yml  ← manual Stage 2 only
-  stage3_cover_letter.yml    ← manual Stage 3 only
-  stage4_render_upload.yml   ← manual Stage 4 only
+### Python dependencies
+Install with:
+```bash
+pip install -r requirements.txt
 ```
 
-**Smoke test (Stage 2):** Enable the `smoke_test` checkbox when running Stage 2 manually to verify DB writes before running the full LLM generation.
-
----
-
-## Setup
-
-### 1. GitHub Secrets
-Add the following secrets in your repo settings (`Settings → Secrets → Actions`):
-
-| Secret | Description |
-|---|---|
-| `SUPABASE_URL` | Your Supabase project URL |
-| `SUPABASE_SECRET_KEY` | Service role key (not anon key) |
-| `GITHUB_TOKEN` | Auto-provided by GitHub Actions |
-
-### 2. Supabase database
-Required tables:
-
-**`runs`**
-| Column | Type |
-|---|---|
-| `id` | uuid (PK) |
-| `status` | text |
-| `total_links` | int |
-| `source_csv` | text |
-| `created_at` | timestamptz |
-| `finished_at` | timestamptz |
-
-**`jobs`**
-| Column | Type |
-|---|---|
-| `id` | uuid (PK) |
-| `run_id` | uuid (FK → runs) |
-| `link` | text |
-| `status` | text (check: pending/extracted/resume_generated/cover_letter_generated/completed/failed) |
-| `job_scope` | jsonb |
-| `resume_json` | jsonb |
-| `cover_letter_json` | jsonb |
-| `resume_url` | text |
-| `cover_letter_url` | text |
-| `error_message` | text |
-| `updated_at` | timestamptz |
-
-### 3. Supabase Storage
-Create a **private** bucket named `generated-documents`.
-
-### 4. Base resume
-Populate `assets/base_resume.json` with your full resume details. This is the LLM's source of truth — the richer the detail, the better the tailoring. Structure:
-
-```json
-{
-  "identity": { "name", "email", "mobile", "location", "linkedin" },
-  "fixed_sections": { "education", "certifications", "references" },
-  "base_sections": { ... full work experience ... }
-}
-```
-
-### 5. LLM config
-Edit `config.json` to change the model per stage:
-
-```json
-{
-  "extract":               { "backend": "copilot_cli", "model": "claude-sonnet-4.6" },
-  "generate_resume":       { "backend": "copilot_cli", "model": "claude-opus-4.5" },
-  "generate_cover_letter": { "backend": "copilot_cli", "model": "claude-opus-4.5" }
-}
-```
-
-Currently uses GitHub Copilot CLI (`@github/copilot` npm package) via `GITHUB_TOKEN`. To switch to another provider (e.g. Groq), add a new backend class in `src/llm_backend.py`.
-
----
-
-## Project structure
-
-```
-.github/workflows/
-  pipeline.yml                  Full pipeline orchestrator
-  stage2_resume_partial.yml     Stage 2 reusable workflow
-  stage3_cover_letter.yml       Stage 3 reusable workflow
-  stage4_render_upload.yml      Stage 4 reusable workflow
-  copilot-ci-smoke.yml          Copilot CLI connectivity test
-
-assets/
-  base_resume.json              Your master resume (source of truth for LLM)
-  templates/
-    resume_template.docx        Word template (styles/margins reference)
-    cover_letter_template.docx  Word template (styles/margins reference)
-
-incoming/                       Drop CSVs here to trigger the pipeline
-
-prompts/
-  prompt1_extract_job_scope.txt
-  prompt2_generate_resume_partial.txt
-  prompt3_generate_cover_letter.txt
-
-schemas/
-  job_scope.schema.json
-  resume_partial.schema.json
-  cover_letter.schema.json
-
-src/
-  db.py                         Supabase DB helpers
-  llm_backend.py                LLM abstraction (Copilot CLI backend)
-  parse_csv.py                  Stage 1a: parse CSV, create run/jobs
-  extract_job_scope.py          Stage 1b: scrape + extract job scope
-  query_by_status.py            Helper: fetch job IDs by status
-  generate_resume_partial.py    Stage 2: generate tailored resume JSON
-  generate_cover_letter.py      Stage 3: generate cover letter JSON
-  render_documents.py           Renderer: JSON → .docx (resume + cover letter)
-  render_and_upload.py          Stage 4: render + upload to Supabase Storage
-
-config.json                     LLM backend/model config per stage
-requirements.txt                Python dependencies
-```
-
----
-
-## CSV format
-
-```csv
-job_link
-https://www.linkedin.com/jobs/view/1234567890/
-https://www.seek.co.nz/job/12345678
-```
-
-Column must be one of: `job_link`, `link`, `url`, `job_url`.
-
----
-
-## Notes
-- The pipeline uses GitHub Actions as free cloud compute — no server required.
-- LLM calls use GitHub Copilot CLI which requires a Copilot license via `GITHUB_TOKEN`.
-- Signed URLs expire after 7 days. Re-run Stage 4 for a fresh link if needed.
-- To switch LLM providers, implement a new backend class in `src/llm_backend.py` and update `config.json`.
-  Stage 1: fetches job page, calls LLM, validates JSON, writes result/status.
-
-### Input
-- `incoming/*.csv`  
-  Trigger files. Must include a `job_link` column.
-
----
-
-## Required GitHub Secrets
-
+### GitHub Actions secrets
 - `SUPABASE_URL`
 - `SUPABASE_SECRET_KEY`
+- provider keys used by `config.json` stage/provider settings (for example `GROQ_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, etc.)
 
----
+### Supabase
+You need:
+- a private storage bucket named `generated-documents`
+- `runs` and `jobs` tables
 
-## Copilot in GitHub Actions
+Current pipeline expects the `jobs` table to include at least:
+- `status` values covering `pending`, `scraped`, `extracted`, `resume_generated`, `cover_letter_generated`, `completed`, `failed`
+- `cleaned_text`, `job_scope`, `resume_json`, `cover_letter_json`, `resume_url`, `cover_letter_url`, `error_message`
 
-This workflow uses:
-- job permission: `copilot-requests: write`
-- step env: `GITHUB_TOKEN: ${{ github.token }}`
+Reference setup/migration notes are in `Supabase setup and config.txt`.
 
-No PAT is required for this setup.
+## Workflows in this repo
 
----
+- **`.github/workflows/pipeline.yml`**: CSV-triggered entry workflow (`incoming/**/*.csv`), runs parse + scrape, then calls Stage 1b reusable workflow.
+- **`.github/workflows/manual_scrape_pipeline.yml`**: manual-scrape JSON trigger (`incoming_manual/**/*.json`), ingests local scrape exports, then calls Stage 1b reusable workflow.
+- **`.github/workflows/stage1_extract_job_scope.yml`**: Stage 1b extraction from `scraped` jobs, then fans into Stage 2 → 3 → 4 reusable workflows.
+- **`.github/workflows/stage2_resume_partial.yml`**: resume JSON generation per `job_id`.
+- **`.github/workflows/stage3_cover_letter.yml`**: cover letter JSON generation per `job_id`.
+- **`.github/workflows/stage4_render_upload.yml`**: `.docx` rendering and Supabase upload per `job_id`.
+- **`.github/workflows/copilot-ci-smoke.yml`**: validates Copilot CLI setup in Actions.
+- **`.github/workflows/test-supabase-db.yml`**: runs DB smoke test from `test/db_smoke_test.py`.
 
-## Status model (current)
+## File-by-file guide
 
-`pending` → `extracted`  
-or  
-`pending` → `failed` (with `error_message`)
+### Root files
 
----
+| File | Purpose |
+|---|---|
+| `README.md` | Repository documentation and operating guide. |
+| `Supabase setup and config.txt` | Manual Supabase SQL setup and migration notes. |
+| `config.json` | LLM provider + model selection per stage. |
+| `requirements.txt` | Python package dependencies. |
+| `llm_backend.patch` | Historical patch/diff snapshot for backend updates. |
+| `prompt2.patch` | Historical patch/diff snapshot for prompt updates. |
+| `scrape_job_page_v2.patch` | Historical patch/diff snapshot for scraping logic updates. |
 
-## Next planned stages
+### GitHub workflows
 
-- Stage 2: Generate tailored resume JSON
-- Stage 3a: Build resume `.docx`
-- Stage 3b: Generate cover letter JSON
-- Stage 4: Build cover letter `.docx`
+| File | Purpose |
+|---|---|
+| `.github/workflows/copilot-ci-smoke.yml` | Manual Copilot CLI smoke test workflow. |
+| `.github/workflows/manual_scrape_pipeline.yml` | Triggered by `incoming_manual/**/*.json`; ingests local scrape exports and continues pipeline. |
+| `.github/workflows/pipeline.yml` | Triggered by `incoming/**/*.csv`; default entry pipeline. |
+| `.github/workflows/stage1_extract_job_scope.yml` | Reusable run-level workflow: extract job scope, then call Stages 2–4. |
+| `.github/workflows/stage2_resume_partial.yml` | Reusable job-level Stage 2 workflow. |
+| `.github/workflows/stage3_cover_letter.yml` | Reusable job-level Stage 3 workflow. |
+| `.github/workflows/stage4_render_upload.yml` | Reusable job-level Stage 4 workflow. |
+| `.github/workflows/test-supabase-db.yml` | Manual database smoke test workflow. |
 
-We will update this README as each stage is added.
+### Source code (`src/`)
+
+| File | Purpose |
+|---|---|
+| `src/__init__.py` | Package marker for `src` module imports. |
+| `src/db.py` | Supabase DB helpers: create/get/update runs/jobs and status queries. |
+| `src/parse_csv.py` | Reads latest/selected CSV from `incoming/`, creates run + pending jobs. |
+| `src/query_by_status.py` | Returns job IDs for a given `run_id` + status (for workflow fan-out). |
+| `src/scrape_job_page.py` | Fetches and cleans job pages, then stores `cleaned_text` and marks jobs `scraped`. |
+| `src/extract_job_scope.py` | LLM extraction of structured `job_scope` from `cleaned_text`. |
+| `src/generate_resume_partial.py` | LLM generation of tailored resume JSON sections. |
+| `src/generate_cover_letter.py` | LLM generation of tailored cover letter JSON. |
+| `src/render_documents.py` | Converts resume/cover-letter JSON into `.docx` documents (formatting/template logic). |
+| `src/render_and_upload.py` | Renders docs in-memory, uploads to Supabase Storage, saves signed URLs. |
+| `src/ingest_manual_scrape.py` | Ingests local scrape export JSON into DB as `scraped` jobs. |
+| `src/llm_backend.py` | Multi-provider LLM backend factory + provider implementations + schema validation. |
+| `src/__pycache__/__init__.cpython-313.pyc` | Tracked Python bytecode cache artifact. |
+| `src/__pycache__/db.cpython-313.pyc` | Tracked Python bytecode cache artifact. |
+| `src/__pycache__/llm_backend.cpython-313.pyc` | Tracked Python bytecode cache artifact. |
+| `src/__pycache__/render_documents.cpython-313.pyc` | Tracked Python bytecode cache artifact. |
+| `src/__pycache__/scrape_job_page.cpython-313.pyc` | Tracked Python bytecode cache artifact. |
+
+### Local manual scraping package (`manual_scrape/`)
+
+| File | Purpose |
+|---|---|
+| `manual_scrape/__init__.py` | Package marker for local scraping module. |
+| `manual_scrape/links.csv` | Input links for local manual scraping runs. |
+| `manual_scrape/scrape_locally.py` | Local-only scraper that writes cleaned exports to `incoming_manual/` (or `manual_scrape/test_runs/` in `--test` mode). |
+| `manual_scrape/__pycache__/__init__.cpython-313.pyc` | Tracked Python bytecode cache artifact. |
+| `manual_scrape/__pycache__/scrape_locally.cpython-313.pyc` | Tracked Python bytecode cache artifact. |
+
+### Prompt templates (`prompts/`)
+
+| File | Purpose |
+|---|---|
+| `prompts/prompt1_extract_job_scope.txt` | Prompt template for job scope extraction. |
+| `prompts/prompt2_generate_resume_partial.txt` | Current prompt template for tailored resume partial generation. |
+| `prompts/prompt2_generate_resume_partial_OLD.txt` | Older prompt version kept for comparison/reference. |
+| `prompts/prompt3_generate_cover_letter.txt` | Prompt template for cover letter generation. |
+
+### JSON schemas (`schemas/`)
+
+| File | Purpose |
+|---|---|
+| `schemas/job_scope.schema.json` | Validation schema for Stage 1 extracted job scope JSON. |
+| `schemas/resume_partial.schema.json` | Validation schema for Stage 2 resume partial JSON. |
+| `schemas/cover_letter.schema.json` | Validation schema for Stage 3 cover letter JSON. |
+
+### Assets and templates (`assets/`)
+
+| File | Purpose |
+|---|---|
+| `assets/base_resume.json` | Master resume source data used to tailor outputs. |
+| `assets/templates/resume_template.docx` | Resume formatting template. |
+| `assets/templates/cover_letter_template.docx` | Cover letter formatting template. |
+| `assets/test_resume.json` | Sample resume JSON for rendering checks. |
+| `assets/test_cover_letter.json` | Sample cover letter JSON for rendering checks. |
+
+### Inputs and output samples
+
+| File | Purpose |
+|---|---|
+| `incoming/jobs linkedinN20 25082026.csv` | Example CSV input watched by default pipeline. |
+| `incoming_manual/export_20260828T102818Z.json` | Example local manual-scrape export consumed by manual ingestion pipeline. |
+| `output/pipelineOLD.yml` | Legacy/archived workflow draft kept as reference. |
+
+### Scripts and tests
+
+| File | Purpose |
+|---|---|
+| `scripts/setup_supabase.py` | One-time helper script for Supabase provisioning. |
+| `test/db_smoke_test.py` | DB connectivity + CRUD smoke test for `runs`/`jobs`. |
+
+## Notes
+
+- Stage execution is status-driven via the `jobs.status` field.
+- Stage scripts mark failed items with `status = failed` and `error_message`.
+- Stage 4 writes signed URLs that currently expire after 7 days.
